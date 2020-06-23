@@ -28,5 +28,13 @@ set(SOURCES
 
 link_directories(${FreeImage_LIBRARY_DIR})
 add_executable(kinect_fusion ${SOURCES} ${HEADERS})
-target_include_directories(kinect_fusion PUBLIC ${Eigen3_INCLUDE_DIR})
+target_include_directories(kinect_fusion PUBLIC ${Eigen3_INCLUDE_DIR} ${FreeImage_INCLUDE_DIR})
 target_link_libraries(kinect_fusion general freeimage)
+
+# On Windows copy dll to executable folder
+if(WIN32)
+    add_custom_command(TARGET kinect_fusion POST_BUILD        # Adds a post-build event to MyTest
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
+            "${LIBRARY_DIR}/FreeImage/x64/FreeImage.dll"      # <--this is in-file
+            $<TARGET_FILE_DIR:kinect_fusion>)                 # <--this is out-file path
+endif(WIN32)
