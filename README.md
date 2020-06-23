@@ -22,3 +22,7 @@
 `cmake .. `\
 `make`\
 `./kinect_fusion`
+
+### Setup (Windows)
+* Follow the same file structure as in Linux Setup
+* Add pre-compiled libraries of FreeImage in `KinectFusion/libs`
