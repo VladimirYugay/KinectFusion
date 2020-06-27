@@ -38,3 +38,21 @@ void Frame::computeVertices(const float* depthMap,
         }
     }
 }
+
+void Frame::computeNormals(int depthWidth, int depthHeight) {
+    mNormals = std::vector<Eigen::Vector3f>(
+        depthHeight * depthWidth, Vector3f(MINF, MINF, MINF));
+
+    for (size_t i = 1; i < depthHeight - 1; i++) {
+        for (size_t j = 1; j < depthWidth - 1; j++) {
+            size_t idx = i * depthWidth + j;
+            Eigen::Vector3f du = mVertices[idx + 1] - mVertices[idx - 1];
+            Eigen::Vector3f dv = mVertices[
+                idx + depthWidth] - mVertices[idx - depthWidth];
+            if (du.allFinite() && dv.allFinite()) {
+                mNormals[idx] = du.cross(dv);
+                mNormals[idx].normalize();
+            }
+        }
+    }
+}

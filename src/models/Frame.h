@@ -23,6 +23,7 @@ class Frame {
 void computeVertices(const float* depthMap,
         const Eigen::Matrix3f &depthIntrinsics,
         int depthWidth, int depthHeight);
+void computeNormals(int depthWidth, int depthHeight);
 
 std::vector<Eigen::Vector3f> mVertices;
 std::vector<Eigen::Vector3f> mNormals;
