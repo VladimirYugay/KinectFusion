@@ -35,8 +35,7 @@ set(HEADERS
     ${HELPERS_DIR}/Eigen.h
     ${HELPERS_DIR}/FreeImageHelper.h
     ${HELPERS_DIR}/VirtualSensor.h
-    ${MODELS_DIR}/Frame.h
-    ${MODELS_DIR}/Vertex.h)
+    ${MODELS_DIR}/Frame.h)
 
 set(SOURCES
     ${HELPERS_DIR}/FreeImageHelper.cpp
