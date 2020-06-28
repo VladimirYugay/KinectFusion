@@ -4,6 +4,11 @@ set(CMAKE_CONFIGURATION_TYPES Debug Release CACHE TYPE INTERNAL FORCE)
 
 project(kinect_fusion)
 
+# Mac only stuff
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(MACOSX TRUE)
+endif()
+
 # Options
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src CACHE PATH "Path to source folder")
 set(HELPERS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/helpers CACHE PATH "Path to helpers folder")
@@ -16,6 +21,14 @@ if(WIN32)
     set(FreeImage_LIBRARY_DIR ${LIBRARY_DIR}/FreeImage/x64/ CACHE PATH "Path to FreeImage .lib/.dll folder")
 endif(WIN32)
 
+# Use 
+if(MACOSX)  
+    set(FreeImage_INCLUDE_DIR "/usr/local/Cellar/freeimage/3.18.0/include")
+    set(FreeImage_LIBRARY_DIR "/usr/local/Cellar/freeimage/3.18.0/lib")
+    set(Eigen3_INCLUDE_DIR /usr/local/Cellar/eigen/3.3.7/include/eigen3)
+endif(MACOSX)
+
+message(${Eigen3_INCLUDE_DIR})
 
 set(HEADERS 
     ${HELPERS_DIR}/Eigen.h
