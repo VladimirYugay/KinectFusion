@@ -11,11 +11,12 @@ Frame::Frame(const float* depthMap,
             const Eigen::Matrix4f &depthExtrinsicsInv,
             const Eigen::Matrix4f &trajectoryInv,
             int depthWidth, int depthHeight) {
-    computeVertices(depthMap, depthIntrinsics, depthWidth, depthHeight);
+    computeVertexMap(depthMap, depthIntrinsics, depthWidth, depthHeight);
+    computeNormalMap(depthWidth, depthHeight);
     std::cout << "Frame created!" << std::endl;
 }
 
-void Frame::computeVertices(const float* depthMap,
+void Frame::computeVertexMap(const float* depthMap,
     const Eigen::Matrix3f &depthIntrinsics,
     int depthWidth, int depthHeight) {
 
@@ -39,7 +40,7 @@ void Frame::computeVertices(const float* depthMap,
     }
 }
 
-void Frame::computeNormals(int depthWidth, int depthHeight) {
+void Frame::computeNormalMap(int depthWidth, int depthHeight) {
     mNormals = std::vector<Eigen::Vector3f>(
         depthHeight * depthWidth, Vector3f(MINF, MINF, MINF));
 
