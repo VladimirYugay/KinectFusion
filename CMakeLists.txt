@@ -12,6 +12,7 @@ endif()
 # Options
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src CACHE PATH "Path to source folder")
 set(HELPERS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/helpers CACHE PATH "Path to helpers folder")
+set(MODELS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/models CACHE PATH "Path to models folder")
 set(LIBRARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs CACHE PATH "Path to lib folder")
 set(Eigen3_INCLUDE_DIR ${LIBRARY_DIR}/eigen/ CACHE PATH "Path to Eigen source folder")
 
@@ -33,10 +34,12 @@ message(${Eigen3_INCLUDE_DIR})
 set(HEADERS 
     ${HELPERS_DIR}/Eigen.h
     ${HELPERS_DIR}/FreeImageHelper.h
-    ${HELPERS_DIR}/VirtualSensor.h)
+    ${HELPERS_DIR}/VirtualSensor.h
+    ${MODELS_DIR}/Frame.h)
 
 set(SOURCES
     ${HELPERS_DIR}/FreeImageHelper.cpp
+    ${MODELS_DIR}/Frame.cpp
     ${SOURCE_DIR}/main.cpp)
 
 link_directories(${FreeImage_LIBRARY_DIR})

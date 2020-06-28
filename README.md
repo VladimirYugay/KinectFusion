@@ -1,6 +1,11 @@
 ## Kinect Fusion 
 
 ### Setup (Linux)
+
+* If you're contributing, please use `cpplint`\
+Install via: `pip install cpplint`\
+Run with: `cpplint [OPTIONS] files`
+
 * Install `cmake` if it's not installed yet\
 `sudo apt-get install cmake` 
 
