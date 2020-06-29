@@ -41,6 +41,17 @@ int main() {
                             depthHeight);
         std::cout << "Processing frame!" << std::endl;
 
+        // // test run for pose estimation, uncomment to run
+        // ICP icp;
+        // std::vector<Vector3f> sourcePoints(1, Vector3f(0, 0, 0));
+        // std::vector<Vector3f> targetPoints(1, Vector3f(0, 0, 0));
+        // std::vector<Vector3f> targetNormals(1, Vector3f(1, 0, 0));
+        // Matrix4f pose = icp.estimatePose(
+        //     sourcePoints,
+        //     targetPoints,
+        //     targetNormals);
+        // std::cout << "Pose: " << pose << std::endl;
+
         frameCount++;
     }
     return 0;

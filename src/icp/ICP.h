@@ -18,5 +18,5 @@ class ICP {
         const std::vector<Vector3f>& sourcePoints,
         const std::vector<Vector3f>& targetPoints,
         const std::vector<Vector3f>& targetNormals,
-        int iterationsNums);
+        int iterationsNum = 1);
 };
