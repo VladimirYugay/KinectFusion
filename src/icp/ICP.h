@@ -2,6 +2,7 @@
 // Author: Vladimir
 #pragma once
 
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -10,11 +11,19 @@
 
 class ICP {
  public:
-    ICP(const Frame& _prevFrame, const Frame& _curFrame);
-    Matrix4f estimatePose(
-        const std::vector<std::pair<size_t, size_t>>& correspondenceIds,
-        int iterationsNum = 1);
+  ICP(Frame &_prevFrame, Frame &_curFrame, const double distanceThreshold,
+      const double normalThreshold);
+
+  Matrix4f estimatePose(
+      const std::vector<std::pair<size_t, size_t>> &correspondenceIds,
+      int iterationsNum = 1);
+
+  std::vector<std::pair<size_t, size_t>> findIndicesOfCorrespondingPoints(
+      const Eigen::Matrix4f &estimatedPose);
+
  private:
-    const Frame& prevFrame;
-    const Frame& curFrame;
+  Frame &prevFrame;
+  Frame &curFrame;
+  const double distanceThreshold;
+  const double normalThreshold;
 };
