@@ -2,6 +2,7 @@
 // Author: Vladimir
 #pragma once
 
+#include <utility>
 #include <vector>
 
 #include "../helpers/Eigen.h"
@@ -9,14 +10,11 @@
 
 class ICP {
  public:
-    ICP();
-/**
- * Estimates the pose of the camera
- * Expects points in global coordinate frame
-*/
+    ICP(const Frame& _prevFrame, const Frame& _curFrame);
     Matrix4f estimatePose(
-        const std::vector<Vector3f>& sourcePoints,
-        const std::vector<Vector3f>& targetPoints,
-        const std::vector<Vector3f>& targetNormals,
+        const std::vector<std::pair<size_t, size_t>>& correspondenceIds,
         int iterationsNum = 1);
+ private:
+    const Frame& prevFrame;
+    const Frame& curFrame;
 };

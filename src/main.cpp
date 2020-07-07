@@ -21,6 +21,8 @@ int main() {
 
     int maxFrameNum = 2;
     int frameCount = 0;
+    Frame prevFrame;
+
     while (frameCount < maxFrameNum && sensor.ProcessNextFrame()) {
         float* depthMap = sensor.GetDepth();
         BYTE* colorMap = sensor.GetColorRGBX();
@@ -32,26 +34,25 @@ int main() {
         int depthHeight = sensor.GetDepthImageHeight();
         int depthWidth = sensor.GetDepthImageWidth();
 
-        Frame frame = Frame(depthMap,
+        Frame curFrame = Frame(depthMap,
                             colorMap,
                             depthIntrinsicsInv,
                             depthExtrinsicsInv,
                             trajectoryInv,
                             depthWidth,
                             depthHeight);
-        std::cout << "Processing frame!" << std::endl;
-
+        // Do the job
         // // test run for pose estimation, uncomment to run
-        // ICP icp;
-        // std::vector<Vector3f> sourcePoints(1, Vector3f(0, 0, 0));
-        // std::vector<Vector3f> targetPoints(1, Vector3f(0, 0, 0));
-        // std::vector<Vector3f> targetNormals(1, Vector3f(1, 0, 0));
-        // Matrix4f pose = icp.estimatePose(
-        //     sourcePoints,
-        //     targetPoints,
-        //     targetNormals);
-        // std::cout << "Pose: " << pose << std::endl;
-
+        // if (frameCount > 0) {
+        //     std::cout << prevFrame.getVertex(302992) << std::endl;
+        //     std::cout << curFrame.getVertex(302992) << std::endl;
+        //     ICP icp(prevFrame, curFrame);
+        //     std::vector<std::pair<size_t, size_t>> correspondenceIds(
+        //         {{302990, 302990}});
+        //     Matrix4f pose = icp.estimatePose(correspondenceIds, 1);
+        //     std::cout << pose << std::endl;
+        // }
+        prevFrame = curFrame;
         frameCount++;
     }
     return 0;
