@@ -14,6 +14,7 @@ set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src CACHE PATH "Path to source folder
 set(HELPERS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/helpers CACHE PATH "Path to helpers folder")
 set(ICP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/icp CACHE PATH "Path to icp folder")
 set(MODELS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/models CACHE PATH "Path to models folder")
+set(TSDF_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/TSDF CACHE PATH "Path to TSDF folder")
 set(LIBRARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs CACHE PATH "Path to lib folder")
 set(Eigen3_INCLUDE_DIR ${LIBRARY_DIR}/eigen/ CACHE PATH "Path to Eigen source folder")
 
@@ -37,12 +38,14 @@ set(HEADERS
     ${HELPERS_DIR}/FreeImageHelper.h
     ${HELPERS_DIR}/VirtualSensor.h
     ${ICP_DIR}/ICP.h
+    ${TSDF_DIR}/Volume.h
     ${MODELS_DIR}/Frame.h)
 
 set(SOURCES
     ${HELPERS_DIR}/FreeImageHelper.cpp
     ${MODELS_DIR}/Frame.cpp
     ${ICP_DIR}/ICP.cpp
+    ${TSDF_DIR}/Volume.cpp
     ${SOURCE_DIR}/main.cpp)
 
 link_directories(${FreeImage_LIBRARY_DIR})
