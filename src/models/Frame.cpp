@@ -5,6 +5,8 @@
 #include <iostream>
 
 
+Frame::Frame() {}
+
 Frame::Frame(const float* depthMap,
             const BYTE* colorMap,
             const Eigen::Matrix3f &depthIntrinsics,
@@ -16,6 +18,18 @@ Frame::Frame(const float* depthMap,
     std::cout << "Frame created!" << std::endl;
 }
 
+Eigen::Vector3f Frame::getVertex(size_t idx) const {
+    return mVertices[idx];
+}
+
+Eigen::Vector3f Frame::getNormal(size_t idx) const {
+    return mNormals[idx];
+}
+
+int Frame::getVertexCount() const {
+    return mVertices.size();
+}
+
 void Frame::computeVertexMap(const float* depthMap,
     const Eigen::Matrix3f &depthIntrinsics,
     int depthWidth, int depthHeight) {
@@ -25,14 +39,13 @@ void Frame::computeVertexMap(const float* depthMap,
     float cX = depthIntrinsics(0, 2);
     float cY = depthIntrinsics(1, 2);
 
-    mVertices = std::vector<Eigen::Vector3f>(depthHeight * depthWidth);
+    mVertices = std::vector<Eigen::Vector3f>(
+        depthHeight * depthWidth, Vector3f(MINF, MINF, MINF));
     for (size_t i = 0; i < depthHeight; i++) {
         for (size_t j = 0; j < depthWidth; j++) {
             size_t idx = i * depthWidth + j;
             float depth = depthMap[idx];
-            if (depth == MINF) {
-                mVertices[idx] = Vector3f(MINF, MINF, MINF);
-            } else {
+            if (depth != MINF) {
                 mVertices[idx] = Vector3f(
                     (j - cX) / fX * depth, (i - cY) / fY * depth, depth);
             }

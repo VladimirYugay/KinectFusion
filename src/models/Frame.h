@@ -10,22 +10,22 @@
 
 class Frame {
  public:
+    Frame();
     Frame(const float* depthMap,
         const BYTE* colorMap,
         const Eigen::Matrix3f &depthIntrinsicsInverse,
         const Eigen::Matrix4f &depthExtrinsicsInv,
         const Eigen::Matrix4f &trajectoryInv,
         int depthWidth, int depthHeight);
- private:
-/**
- * Computes vertices in camera space
-*/
-void computeVertexMap(const float* depthMap,
-        const Eigen::Matrix3f &depthIntrinsics,
-        int depthWidth, int depthHeight);
-void computeNormalMap(int depthWidth, int depthHeight);
+    Eigen::Vector3f getVertex(size_t idx) const;
+    Eigen::Vector3f getNormal(size_t idx) const;
+    int getVertexCount() const;
 
-std::vector<Eigen::Vector3f> mVertices;
-std::vector<Eigen::Vector3f> mNormals;
-void computePixel2Camera();
+ private:
+    void computeVertexMap(const float* depthMap,
+            const Eigen::Matrix3f &depthIntrinsics,
+            int depthWidth, int depthHeight);
+    void computeNormalMap(int depthWidth, int depthHeight);
+    std::vector<Eigen::Vector3f> mVertices;
+    std::vector<Eigen::Vector3f> mNormals;
 };
