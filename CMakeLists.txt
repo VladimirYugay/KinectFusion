@@ -9,6 +9,14 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(MACOSX TRUE)
 endif()
 
+# Enable CUDA if it's available
+include(CheckLanguage)
+check_language(CUDA)
+if (CMAKE_CUDA_COMPILER)
+    enable_language(CUDA)
+endif()
+
+
 # Options
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src CACHE PATH "Path to source folder")
 set(HELPERS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/helpers CACHE PATH "Path to helpers folder")
@@ -23,8 +31,8 @@ if(WIN32)
     set(FreeImage_LIBRARY_DIR ${LIBRARY_DIR}/FreeImage/x64/ CACHE PATH "Path to FreeImage .lib/.dll folder")
 endif(WIN32)
 
-# Use 
-if(MACOSX)  
+# Use
+if(MACOSX)
     set(FreeImage_INCLUDE_DIR "/usr/local/Cellar/freeimage/3.18.0/include")
     set(FreeImage_LIBRARY_DIR "/usr/local/Cellar/freeimage/3.18.0/lib")
     set(Eigen3_INCLUDE_DIR /usr/local/Cellar/eigen/3.3.7/include/eigen3)
@@ -32,17 +40,19 @@ endif(MACOSX)
 
 message(${Eigen3_INCLUDE_DIR})
 
-set(HEADERS 
+set(HEADERS
     ${HELPERS_DIR}/Eigen.h
     ${HELPERS_DIR}/FreeImageHelper.h
     ${HELPERS_DIR}/VirtualSensor.h
     ${ICP_DIR}/ICP.h
+    ${ICP_DIR}/SVD.cuh
     ${MODELS_DIR}/Frame.h)
 
 set(SOURCES
     ${HELPERS_DIR}/FreeImageHelper.cpp
     ${MODELS_DIR}/Frame.cpp
     ${ICP_DIR}/ICP.cpp
+    ${ICP_DIR}/SVD.cu
     ${SOURCE_DIR}/main.cpp)
 
 link_directories(${FreeImage_LIBRARY_DIR})
