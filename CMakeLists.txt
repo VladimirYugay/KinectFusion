@@ -45,14 +45,14 @@ set(HEADERS
     ${HELPERS_DIR}/FreeImageHelper.h
     ${HELPERS_DIR}/VirtualSensor.h
     ${ICP_DIR}/ICP.h
-    ${ICP_DIR}/SVD.cuh
+    ${ICP_DIR}/CUDAICPWrapper.cuh
     ${MODELS_DIR}/Frame.h)
 
 set(SOURCES
     ${HELPERS_DIR}/FreeImageHelper.cpp
     ${MODELS_DIR}/Frame.cpp
     ${ICP_DIR}/ICP.cpp
-    ${ICP_DIR}/SVD.cu
+    ${ICP_DIR}/CUDAICP.cu
     ${SOURCE_DIR}/main.cpp)
 
 link_directories(${FreeImage_LIBRARY_DIR})
