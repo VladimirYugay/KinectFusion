@@ -1,46 +1,55 @@
+// Copyright 2020 Vladimir
+// Author: Vladimir
+#include <stdio.h>
+
 #include "CUDAICPWrapper.cuh"
 
 __global__ void fillSystem(
-    float *sourcePts, float* targetPts, float *targetNormals,
-    int n, float *A, float*b) {
-
-    
-    printf("AXAXAXAXAXA");
+    float *x, float* y, float *n, int ptsNum, float *A, float*b) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < ptsNum) {
+        int id = 3 * i;
+        A[6 * i] = n[id + 2] * x[id + 1] - n[id + 1] * x[id + 2];
+        A[6 * i + 1] = n[id] * x[id + 2] - n[id + 2] * x[id];
+        A[6 * i + 2] = n[id + 1] * x[id] - n[id] * x[id + 1];
+        A[6 * i + 3] = n[id];
+        A[6 * i + 4] = n[id + 1];
+        A[6 * i + 5] = n[id + 2];
+        b[i] = n[id] * y[id] + n[id + 1] * y[id + 1] +
+            n[id + 2] * y[id + 2] - n[id] * x[id] -
+            n[id + 1] * x[id + 1] - n[id + 2] * x[id + 2];
+    }
 }
 
 namespace CUDA {
-	void createEquations(
+    void createEquations(
         const float *sourcePts,
         const float *targetPts,
         const float *targetNrmls,
-        int n,
-        float *A,
-        float *b) {
-
-
+        int n, float *A, float *b) {
         float *dSourcePts, *dTargetPts, *dTargetNrmls;
         float *dA, *db;
         size_t size = sizeof(float);
 
         // allocate memory on the device
-        cudaMalloc((void**)&dSourcePts, size * n);
-        cudaMalloc((void**)&dTargetPts, size * n);
-        cudaMalloc((void**)&dTargetNrmls, size * n);
-        cudaMalloc((void**)&dA, size * n * 6);
-        cudaMalloc((void**)&db, size * n);
+        cudaMalloc(&dSourcePts, 3 * size * n);
+        cudaMalloc(&dTargetPts, 3 * size * n);
+        cudaMalloc(&dTargetNrmls, 3 * size * n);
+        cudaMalloc(&dA, 6 * size * n);
+        cudaMalloc(&db, size * n);
 
         // transfer data to the device
         cudaMemcpy(
-            dSourcePts, sourcePts, size * n, cudaMemcpyHostToDevice);
+            dSourcePts, sourcePts, 3 * size * n, cudaMemcpyHostToDevice);
         cudaMemcpy(
-            dTargetPts, targetPts, size * n, cudaMemcpyHostToDevice);
+            dTargetPts, targetPts, 3 * size * n, cudaMemcpyHostToDevice);
         cudaMemcpy(
-            dTargetNrmls, targetNrmls, size * n, cudaMemcpyHostToDevice);
-        cudaMemcpy(dA, A, size * n * 6, cudaMemcpyHostToDevice);
-        cudaMemcpy(db, b, size * n, cudaMemcpyHostToDevice);
+            dTargetNrmls, targetNrmls, 3 * size * n, cudaMemcpyHostToDevice);
 
         // execute the kernel
-        fillSystem<<<1, 1>>>(
+        int block_size = 256;
+        int grid_size = ((n + block_size) / block_size);
+        fillSystem<<<block_size, grid_size>>>(
             dSourcePts, dTargetPts, dTargetNrmls, n, dA, db);
 
         // transfer data back
@@ -53,5 +62,5 @@ namespace CUDA {
         cudaFree(dTargetNrmls);
         cudaFree(dA);
         cudaFree(db);
-	}
-}
+    }
+}  // namespace CUDA

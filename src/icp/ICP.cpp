@@ -15,31 +15,70 @@ Matrix4f ICP::estimatePose(
 
     int nPoints = correspondenceIds.size();
     Matrix4f estimatedPose = Matrix4f::Identity();
-    MatrixXf A = MatrixXf::Zero(nPoints, 6);
-    VectorXf b = VectorXf::Zero(nPoints);
-
 
     // TEST RUN ON TEST DATA
-    float sourcePoints[9] = {0, 0, 1, 0, 1, 0, 1, 0, 0};
-    float targetPoints[9] = {0, 0, 1, 0, 1, 0, 1, 0, 0};
-    float targetNormals[9] = {0, 0, 1, 0, 1, 0, 1, 0, 0};
-    float A_arr[9] = {0, 0, 1, 0, 1, 0, 1, 0, 0};
-    float b_arr[9] = {0, 0, 1, 0, 1, 0, 1, 0, 0};
+    float sourcePoints[3 * nPoints];
+    float targetPoints[3 * nPoints];
+    float targetNormals[3 * nPoints];
+    float cudaA[6 * nPoints] = { 0.0 };
+    float cudab[nPoints] = { 0.0 };
 
-    CUDA::createEquations(sourcePoints, targetPoints, targetNormals,
-        3, A_arr, b_arr);
+    for (int i = 0; i < nPoints; i++) {
+        auto pair = correspondenceIds[i];
+        const auto& x = prevFrame.getVertex(pair.first);
+        const auto& y = curFrame.getVertex(pair.second);
+        const auto& n = curFrame.getNormal(pair.second);
 
+        sourcePoints[3 * i] = x(0);
+        sourcePoints[3 * i + 1] = x(1);
+        sourcePoints[3 * i + 2] = x(2);
 
+        targetPoints[3 * i] = y(0);
+        targetPoints[3 * i + 1] = y(1);
+        targetPoints[3 * i + 2] = y(2);
+
+        targetNormals[3 * i] = n(0);
+        targetNormals[3 * i + 1] = n(1);
+        targetNormals[3 * i + 2] = n(2);
+    }
+
+    std::cout << "Source points: " << nPoints << std::endl;
+    for (int i = 0; i < nPoints * 3; i++) {
+        std::cout << sourcePoints[i] << std::endl;
+    }
+
+    // Creates a system of linear equations
+    CUDA::createEquations(
+        sourcePoints, targetPoints, targetNormals,
+        nPoints, cudaA, cudab);
+
+    // Wrap back all the arrays to the eigen format to use the solver
+
+    std::cout << "Constructed system on CUDA" << std::endl;
+    for (int i = 0; i < nPoints; i++) {
+        std::cout << cudaA[i] << " " << cudaA[i + 1] << " "
+        << cudaA[i + 2] << " " << cudaA[i + 3] << " "
+        << cudaA[i + 4] << " " << cudaA[i + 5] << std::endl;
+    }
+
+    MatrixXf A = MatrixXf::Zero(nPoints, 6);
+    VectorXf b = VectorXf::Zero(nPoints);
     for (size_t i = 0; i < nPoints; i++) {
         auto pair = correspondenceIds[i];
         const auto& x = prevFrame.getVertex(pair.first);
         const auto& y = curFrame.getVertex(pair.second);
         const auto& n = curFrame.getNormal(pair.second);
 
-        A.block<1, 3>(i, 0) = x.cross(n);
-        A.block<1, 3>(i, 3) = n;
+        A(i , 0) = n(2) * x(1) - n(1) * x(2);
+        A(i, 1) = n(0) * x(2) - n(2) * x(0);
+        A(i, 2) = n(1) * x(0) - n(0) * x(1);
+        A(i, 3) = n(0);
+        A(i, 4) = n(1);
+        A(i, 5) = n(2);
         b(i) = n.dot(y) - n.dot(x);
     }
+    std::cout << "Constructed system without CUDA" << std::endl;
+    std::cout << A << std::endl;
 
     VectorXf x(6);
     x = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);

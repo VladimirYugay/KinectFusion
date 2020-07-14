@@ -45,13 +45,13 @@ int main() {
         // Do the job
         // test run for pose estimation, uncomment to run
         if (frameCount > 0) {
-            std::cout << prevFrame.getVertex(302992) << std::endl;
-            std::cout << curFrame.getVertex(302992) << std::endl;
+            // std::cout << prevFrame.getVertex(302992) << std::endl;
+            // std::cout << curFrame.getVertex(302992) << std::endl;
             ICP icp(prevFrame, curFrame);
             std::vector<std::pair<size_t, size_t>> correspondenceIds(
                 {{302990, 302990}});
             Matrix4f pose = icp.estimatePose(correspondenceIds, 1);
-            std::cout << pose << std::endl;
+            // std::cout << pose << std::endl;
         }
         prevFrame = curFrame;
         frameCount++;

@@ -1,12 +1,9 @@
+// Copyright 2020 Vladimir
+// Author: Vladimir
 #pragma once
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-
-#include <stdio.h>
-
 
 namespace CUDA {
-	void createEquations(
+    void createEquations(
         const float* sourcePoints,
         const float* targetPoints,
         const float* targetNormals,
