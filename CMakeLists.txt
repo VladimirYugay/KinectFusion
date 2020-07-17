@@ -15,6 +15,7 @@ endif()
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src CACHE PATH "Path to source folder")
 set(HELPERS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/helpers CACHE PATH "Path to helpers folder")
 set(ICP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/icp CACHE PATH "Path to icp folder")
+set(RAYCASTER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/raycaster CACHE PATH "Path to RayCaster folder")
 set(MODELS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/models CACHE PATH "Path to models folder")
 set(LIBRARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs CACHE PATH "Path to lib folder")
 set(Eigen3_INCLUDE_DIR ${LIBRARY_DIR}/eigen/ CACHE PATH "Path to Eigen source folder")
@@ -39,13 +40,19 @@ set(HEADERS
     ${HELPERS_DIR}/FreeImageHelper.h
     ${HELPERS_DIR}/VirtualSensor.h
     ${ICP_DIR}/ICP.h
-    ${MODELS_DIR}/Frame.h)
+    ${MODELS_DIR}/Frame.h
+    ${MODELS_DIR}/Volume.h
+    ${RAYCASTER_DIR}/RayCaster.h
+    ${RAYCASTER_DIR}/Ray.h)
 
 set(SOURCES
     ${HELPERS_DIR}/FreeImageHelper.cpp
     ${MODELS_DIR}/Frame.cpp
+    ${MODELS_DIR}/Volume.cpp
     ${ICP_DIR}/ICP.cpp
-    ${SOURCE_DIR}/main.cpp)
+    ${SOURCE_DIR}/main.cpp
+    ${RAYCASTER_DIR}/RayCaster.cpp
+    ${RAYCASTER_DIR}/Ray.cpp)
 
 link_directories(${FreeImage_LIBRARY_DIR})
 add_executable(kinect_fusion ${SOURCES} ${HEADERS})
