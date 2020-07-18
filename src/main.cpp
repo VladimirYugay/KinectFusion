@@ -34,7 +34,7 @@ int main() {
   }
 
   int frameCount = 0;
-  Frame* prevFrame;
+  Frame prevFrame;
   Volume volume = Volume(Vector3f{ MIN_POINT }, Vector3f{ MAX_POINT }, RESOLUTION, 3);
   RayCaster rc = RayCaster(volume);
 
@@ -52,8 +52,8 @@ int main() {
       Matrix4f pose, mat;
       std::stringstream ss;
 
-      Frame* curFrame =
-          &Frame(depthMap, colorMap, depthIntrinsicsInv, depthExtrinsicsInv,
+      Frame curFrame =
+          Frame(depthMap, colorMap, depthIntrinsicsInv, depthExtrinsicsInv,
               trajectoryInv, depthWidth, depthHeight);
       // Do the job
       // test run for pose estimation, uncomment to run
@@ -64,7 +64,7 @@ int main() {
       else {
           //std::cout << prevFrame.getVertex(302992) << std::endl;
           //std::cout << curFrame.getVertex(302992) << std::endl;
-          ICP icp(*prevFrame, *curFrame, DISTANCE_THRESHOLD, ANGLE_THRESHOLD);
+          ICP icp(prevFrame, curFrame, DISTANCE_THRESHOLD, ANGLE_THRESHOLD);
           // std::vector<std::pair<size_t, size_t>> correspondenceIds(
           //     {{302990, 302990}});
           std::vector<std::pair<size_t, size_t>> correspondenceIds =
@@ -72,28 +72,30 @@ int main() {
           std::cout << "# corresponding points: " << correspondenceIds.size()
               << std::endl;
           std::cout << "# total number of points: "
-              << curFrame->getSize() << std::endl;
+              << curFrame.getSize() << std::endl;
 
           pose = icp.estimatePose(correspondenceIds, 1);
           std::cout << pose << std::endl;
           mat = pose;
 
-          volume.integrate(*curFrame);
+          volume.integrate(curFrame);
 
-          rc.changeFrame(*curFrame);
+          rc.changeFrame(curFrame);
           rc.rayCast();
           
           if (frameCount % 5 == 0) {
               ss << filenameBaseOut << frameCount << ".off";
 
-              if (!curFrame->writeMesh(ss.str(), EDGE_THRESHOLD)) {
+              if (!curFrame.writeMesh(ss.str(), EDGE_THRESHOLD)) {
                   std::cout << "Failed to write mesh!\nCheck file path!" << std::endl;
                   return -1;
               }
           }
       }
 
+      std::cout << curFrame.getNormal(0) << std::endl;
       prevFrame = curFrame;
+      std::cout << prevFrame.getNormal(0) << std::endl;
       frameCount++;
   }
 
