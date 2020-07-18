@@ -20,6 +20,18 @@ set(MODELS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/models CACHE PATH "Path to models
 set(LIBRARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs CACHE PATH "Path to lib folder")
 set(Eigen3_INCLUDE_DIR ${LIBRARY_DIR}/eigen/ CACHE PATH "Path to Eigen source folder")
 
+# Include directories
+set(INCLUDE 
+    ${SOURCE_DIR}
+    ${HELPERS_DIR}
+    ${ICP_DIR}
+    ${MODELS_DIR}
+    ${RAYCASTER_DIR}
+    ${LIBRARY_DIR}
+    ${Eigen3_INCLUDE_DIR})
+
+include_directories(${INCLUDE})
+
 # Use pre-compiled libraries on Windows
 if(WIN32)
     set(FreeImage_INCLUDE_DIR ${LIBRARY_DIR}/FreeImage/x64/ CACHE PATH "Path to FreeImage header file")
@@ -56,7 +68,7 @@ set(SOURCES
 
 link_directories(${FreeImage_LIBRARY_DIR})
 add_executable(kinect_fusion ${SOURCES} ${HEADERS})
-target_include_directories(kinect_fusion PUBLIC ${Eigen3_INCLUDE_DIR} ${FreeImage_INCLUDE_DIR})
+target_include_directories(kinect_fusion PUBLIC ${Eigen3_INCLUDE_DIR} ${FreeImage_INCLUDE_DIR} ${INCLUDE})
 target_link_libraries(kinect_fusion general freeimage)
 
 # On Windows copy dll to executable folder

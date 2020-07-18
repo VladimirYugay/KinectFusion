@@ -1,7 +1,10 @@
 #pragma once
 
-#include "../models/Volume.h"
-#include "../models/Frame.h"
+#ifndef RAYCASTER_H
+#define RAYCASTER_H
+
+#include "Volume.h"
+#include "Frame.h"
 
 class RayCaster {
 private:
@@ -9,12 +12,13 @@ private:
 	Frame frame;
 
 public:
-
 	RayCaster();
-	RayCaster(Volume& vol);
-	RayCaster(Volume& vol, Frame& frame);
+	RayCaster(Volume& vol_);
+	RayCaster(Volume& vol_, Frame& frame_);
 
-	void changeFrame(Frame& frame);
-	void changeVolume(Volume& vol);
+	void changeFrame(Frame& frame_);
+	void changeVolume(Volume& vol_);
 	Frame& rayCast();
 };
+
+#endif // RAYCASTER_H

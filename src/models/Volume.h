@@ -4,8 +4,10 @@
 #define VOLUME_H
 
 #include <limits>
-#include "../helpers/Eigen.h"
-#include "../models/Frame.h"
+#include "Eigen.h"
+#include "Frame.h"
+
+class Frame;
 
 typedef unsigned int uint;
 
@@ -95,7 +97,7 @@ public:
 	float trilinearInterpolation(const Vector3f& p);
 		
 	// using given frame calculate TSDF values for all voxels in the grid
-	void integrate(Frame frame);
+	void integrate(Frame& frame);
 
 	//! Zeros out the memory
 	void zeroOutMemory();
@@ -204,6 +206,8 @@ public:
 				point[2] < 1
 				);
 	}
+
+	void Volume::integrate2(const Matrix3f& intrinsic, const Matrix4f& cameraToWorld, const float* depthmap, int depthMapWidth, int depthMapHeight, const std::vector<Vector3f>& normals);
 
 private:
 

@@ -69,20 +69,23 @@ std::vector<std::pair<size_t, size_t>> ICP::findIndicesOfCorrespondingPoints(
     const Eigen::Matrix4f &estimatedPose) {
   std::vector<std::pair<size_t, size_t>> indicesOfCorrespondingPoints;
 
-  std::vector<Eigen::Vector3f> prevFrameVertexMap = prevFrame.getVertexMap();
-  std::vector<Eigen::Vector3f> prevFrameNormalMap = prevFrame.getNormalMap();
+  Eigen::Vector3f* prevFrameVertexMap = prevFrame.getVertexMap();
+  Eigen::Vector3f* prevFrameNormalMap = prevFrame.getNormalMap();
 
-  std::vector<Eigen::Vector3f> curFrameVertexMapGlobal =
+  Eigen::Vector3f* curFrameVertexMapGlobal =
       curFrame.getVertexMapGlobal();
-  std::vector<Eigen::Vector3f> curFrameNormalMapGlobal =
+  Eigen::Vector3f* curFrameNormalMapGlobal =
       curFrame.getNormalMapGlobal();
+
+  uint mSize = curFrame.getSize();
 
   const auto rotation = estimatedPose.block(0, 0, 3, 3);
   const auto translation = estimatedPose.block(0, 3, 3, 1);
 
   // GPU implementation: use a separate thread for every run of the for
   // loop
-  for (size_t idx = 0; idx < prevFrameVertexMap.size(); idx++) {
+  for (size_t idx = 0; idx < mSize; idx++) {
+      std::cout << idx << std::endl;
     Eigen::Vector3f prevPoint = prevFrameVertexMap[idx];
     Eigen::Vector3f prevNormal = prevFrameNormalMap[idx];
     // std::cout << "Curent Point (Camera): " << curPoint[0] << " " <<
@@ -112,7 +115,7 @@ std::vector<std::pair<size_t, size_t>> ICP::findIndicesOfCorrespondingPoints(
         Eigen::Vector3f curFramePointGlobal = curFrameVertexMapGlobal[curIdx];
         Eigen::Vector3f curFrameNormalGlobal = curFrameNormalMapGlobal[curIdx];
 
-        if (curFramePointGlobal.allFinite() &&
+        if (curFramePointGlobal.allFinite() && 
             (curFramePointGlobal - prevPointGlobal).norm() <
                 distanceThreshold &&
             curFrameNormalGlobal.allFinite() &&

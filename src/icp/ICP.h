@@ -6,8 +6,8 @@
 #include <utility>
 #include <vector>
 
-#include "../helpers/Eigen.h"
-#include "../models/Frame.h"
+#include "Eigen.h"
+#include "Frame.h"
 
 class ICP {
  public:

@@ -2,11 +2,15 @@
 // Author: Vladimir
 #pragma once
 
+#ifndef FRAME_H
+#define FRAME_H
+
 #include <vector>
 
-#include "../helpers/Eigen.h"
-#include "../helpers/VirtualSensor.h"
-#include "../raycaster/RayCaster.h"
+#include "Eigen.h"
+#include "VirtualSensor.h"
+
+typedef unsigned uint;
 
 class Frame {
     friend class RayCaster;
@@ -18,13 +22,14 @@ public:
         const Eigen::Matrix3f& depthIntrinsicsInverse,
         const Eigen::Matrix4f& depthExtrinsicsInv,
         const Eigen::Matrix4f& trajectoryInv, int depthWidth, int depthHeight);
+    ~Frame();
     Eigen::Vector3f getVertex(size_t idx) const;
     Eigen::Vector3f getNormal(size_t idx) const;
     int getVertexCount() const;
-    std::vector<Eigen::Vector3f>& getVertexMapGlobal();
-    std::vector<Eigen::Vector3f>& getNormalMapGlobal();
-    std::vector<Eigen::Vector3f>& getVertexMap();
-    std::vector<Eigen::Vector3f>& getNormalMap();
+    Eigen::Vector3f* getVertexMapGlobal();
+    Eigen::Vector3f* getNormalMapGlobal();
+    Eigen::Vector3f* getVertexMap();
+    Eigen::Vector3f* getNormalMap();
     int getFrameHeight();
     int getFrameWidth();
     void setExtrinsicMatrix(const Eigen::Matrix4f& extrensicMatrix);
@@ -36,28 +41,47 @@ public:
     const float* getDepthMap();
     const BYTE* getColorMap();
     bool writeMesh(const std::string& filename, int edgeThreshold);
+    uint getSize();
+
+    //+++++++++++++++++++++++++++++++++++++++++++++
+    static Eigen::Vector3f& transformPoint(
+        Eigen::Vector3f& point,
+        const Eigen::Matrix4f& transformation);
+
+    static Eigen::Vector2i& perspectiveProjection(
+        Eigen::Vector3f& point,
+        const Eigen::Matrix3f& intrinsic);
+
+    //+++++++++++++++++++++++++++++++++++++++++++++
 
 private:
     void computeVertexMap(const float* depthMap,
         const Eigen::Matrix3f& depthIntrinsics, int depthWidth,
         int depthHeight);
+
     void computeNormalMap(int depthWidth, int depthHeight);
-    std::vector<Eigen::Vector3f> transformPoints(
-        const std::vector<Eigen::Vector3f>& points,
+
+    Eigen::Vector3f* transformPoints(
+        const Eigen::Vector3f* points,
+        uint no_points,
         const Eigen::Matrix4f& transformation);
 
-    std::vector<Eigen::Vector3f> rotatePoints(
-        const std::vector<Eigen::Vector3f>& points,
+    Eigen::Vector3f* rotatePoints(
+        const Eigen::Vector3f* points,
+        uint no_points,
         const Eigen::Matrix3f& rotation);
 
     int depthWidth;
     int depthHeight;
     const float* depthMap;
     const BYTE* colorMap;
-    std::vector<Eigen::Vector3f> mVertices;
-    std::vector<Eigen::Vector3f> mNormals;
-    std::vector<Eigen::Vector3f> mVerticesGlobal;
-    std::vector<Eigen::Vector3f> mNormalsGlobal;
+    uint mSize;
+    Eigen::Vector3f* mVertices;
+    Eigen::Vector3f* mNormals;
+    Eigen::Vector3f* mVerticesGlobal;
+    Eigen::Vector3f* mNormalsGlobal;
     Eigen::Matrix4f extrinsicMatrix;
     Eigen::Matrix3f intrinsicMatrix;
 };
+
+#endif // FRAME_H

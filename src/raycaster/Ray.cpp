@@ -1,10 +1,10 @@
 #include "Ray.h"
-#include "../helpers/Eigen.h"
 
 Ray::Ray() {}
 
 Ray::Ray(Vector3f& start_, Vector3f& direction_) : start(start_), direction(direction_) {
 	direction.normalize();
+	currentPoint = start;
 }
 
 Vector3f& Ray::next() {
@@ -19,6 +19,7 @@ Vector3f& Ray::getStartingPoint() {
 }
 void Ray::setStartingPoint(Vector3f& start_) {
 	start = start_;
+	currentPoint = start_;
 }
 
 Vector3f& Ray::getDirection() {

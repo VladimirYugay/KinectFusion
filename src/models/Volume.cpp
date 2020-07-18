@@ -100,9 +100,9 @@ Vector3f& Volume::calculateNormal(const Vector3f& point) {
 	float sdfZup = trilinearInterpolation(shiftedYup);
 	float sdfZdown = trilinearInterpolation(shiftedYdown);
 
-	x_dir = (sdfXup - sdfXdown) / (2 *ddx);
-	y_dir = (sdfYup - sdfYdown) / (2 *ddy);
-	z_dir = (sdfZup - sdfZdown) / (2 *ddz);
+	x_dir = (sdfXup - sdfXdown) / (2 *dddx);
+	y_dir = (sdfYup - sdfYdown) / (2 *dddy);
+	z_dir = (sdfZup - sdfZdown) / (2 *dddz);
 
 	normal = Vector3f{ x_dir, y_dir, z_dir };
 	normal.normalize();
@@ -162,9 +162,10 @@ float Volume::trilinearInterpolation(const Vector3f& p) {
 }
 
 // using given frame calculate TSDF values for all voxels in the grid
-void Volume::integrate(Frame frame) {
+void Volume::integrate(Frame& frame) {
 	const Matrix4f worldToCamera = frame.getExtrinsicMatrix();
 	const Matrix4f cameraToWorld = worldToCamera.inverse();
+	const Matrix3f intrinsic = frame.getIntrinsicMatrix();
 	Vector3f translation = cameraToWorld.block(0, 3, 3, 1);
 	const float* depthMap = frame.getDepthMap();
 	const BYTE* colorMap = frame.getColorMap();
@@ -173,19 +174,27 @@ void Volume::integrate(Frame frame) {
 
 	// subscripts: g - global coordinate system | c - camera coordinate system | i - image space
 	// short notations: V - vector | P - point | sdf - signed distance field value | tsdf - truncated sdf 
-	Vector3f Pg, Pc, ray, normal;
+	Vector3f Pg, Pc, ray, normal, temp3;
+	Vector4f temp;
 	Vector2i Pi;
 	float depth, lambda, sdf, tsdf, tsdf_weight, value, weight, cos_angle;
 	uint index;
+
+	std::cout << "Integration starting..." << std::endl;
 
 	for (int k = 0; k < dz; k++) {
 		for (int j = 0; j < dy; j++) {
 			for (int i = 0; i < dx; i++) {
 
 				// project the grid point into image space
+
 				Pg = gridToWorld(i, j, k);
 				Pc = frame.projectPointIntoFrame(Pg);
 				Pi = frame.projectOntoImgPlane(Pc);
+
+				//Pg = gridToWorld(i, j, k);
+				//Pc = Frame::transformPoint(Pg, worldToCamera);
+				//Pi = Frame::perspectiveProjection(Pc, intrinsic);
 
 				if (frame.containsImgPoint(Pi)) {
 
@@ -231,9 +240,91 @@ void Volume::integrate(Frame frame) {
 					vol[getPosFromTuple(i, j, k)].setValue((value * weight + tsdf * tsdf_weight) / (weight + tsdf_weight));
 					vol[getPosFromTuple(i, j, k)].setWeight(weight + tsdf_weight);
 				}
+				
+			}
+		}
+	}
+	
+	std::cout << "Integration done!" << std::endl;
+
+}
+
+void Volume::integrate2(const Matrix3f& intrinsic, const Matrix4f& cameraToWorld, const float* depthmap, int depthMapWidth, int depthMapHeight, const std::vector<Vector3f>& normals) {
+	const Matrix4f worldToCamera = cameraToWorld.inverse();
+	Vector4f translation = cameraToWorld.block(0, 3, 4, 1);
+	
+	//std::string filename = "../output/integrate.txt";
+	Vector4f Vg, v, zero, temp;
+	Vector3f p, ray, v3, temp3, KInv_u;
+	float depth, sdf, dot, lenRayVector, lenNormal, cos_angle, sdf_weight, value, weight, tsdf;
+
+	//std::ofstream outFile(filename);
+
+	for (int k = 0; k < dz; k++) {
+		for (int j = 0; j < dy; j++) {
+			for (int i = 0; i < dx; i++) {
+
+				//std::cout << i << " " << j << " " << k << std::endl;
+				temp3 = gridToWorld(i, j, k);
+				Vg = Vector4f{ temp3[0], temp3[1], temp3[2], 1.0f };
+				v = worldToCamera * Vg;
+				v3 = Vector3f{ v[0], v[1], v[2] };
+				//std::cout << p[2] << std::endl;
+				p = intrinsic * v3;
+				p[0] = round(p[0] / p[2]);
+				p[1] = round(p[1] / p[2]);
+
+				if (p[0] >= 0 && p[1] >= 0 && p[1] < depthMapHeight && p[0] < depthMapWidth) {
+					depth = depthmap[int(p[1] * depthMapWidth + p[0])];
+
+					if (depth == MINF)
+						continue;
+
+					temp = v / p[2];
+					KInv_u = Vector3f{ temp[0], temp[1], temp[2] };
+
+					temp = Vg - translation;
+					temp3 = Vector3f{ temp[0], temp[1], temp[2] };
+					sdf = depth - (1 / KInv_u.norm() * temp3).norm(); //v3).norm();
+
+					/*
+					zero = cameraToWorld * Vector4f{ 0.0f, 0.0f, 0.0f, 1.0f };
+
+					temp = pos(i, j, k) - zero;
+					temp3 = Vector3f{ temp[0], temp[1], temp[2] };
+					ray = temp3;
+					//std::cout << int(p[1]) * depthMapWidth + int(p[0]) << std::endl;
+					dot = ray.dot(normals[int(p[1] * depthMapWidth + p[0])]);
+					lenRayVector = ray.norm();
+					lenNormal = normals[int(p[1] * depthMapWidth + p[0])].norm();
+					cos_angle = dot / (lenRayVector * lenNormal);
+					*/
+					sdf_weight = 1; //1 / depth;
+
+					value = vol[getPosFromTuple(i, j, k)].getValue();
+					weight = vol[getPosFromTuple(i, j, k)].getWeight();
+
+					if (value == std::numeric_limits<float>::max()) {
+						value = 0;
+						weight = 0;
+					}
+
+					if (sdf > 0) {
+						tsdf = std::min(1.0f, sdf / MAX_TRUNCATION);
+					}
+					else {
+						tsdf = std::max(-1.0f, sdf / MIN_TRUNCATION);
+					}
+
+
+					vol[getPosFromTuple(i, j, k)].setValue((value * weight + tsdf * sdf_weight) / (weight + sdf_weight));
+					vol[getPosFromTuple(i, j, k)].setWeight(weight + sdf_weight);
+
+					//outFile << vol[getPosFromTuple(i, j, k)].getValue() << " " << vol[getPosFromTuple(i, j, k)].getWeight() << std::endl;
+				}
 
 			}
 		}
 	}
-}
 
+}

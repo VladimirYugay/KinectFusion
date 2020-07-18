@@ -1,5 +1,6 @@
 #include "RayCaster.h"
-#include "../models/Volume.h"
+#include "Volume.h"
+#include "Frame.h"
 #include "Ray.h"
 
 RayCaster::RayCaster() {}
@@ -35,11 +36,14 @@ Frame& RayCaster::rayCast() {
 	int height = frame.getFrameHeight();
 ;
 	Vector3f ray_start, ray_dir, ray_current, ray_previous;
+	Vector3i ray_current_int, ray_previous_int;
 	std::vector<Vector3f> output_vertices_global, output_normals_global;
 
 	float sdf_1, sdf_2;
 	Vector3f p, v, n;
 	uint index;
+
+	std::cout << "Ray Cast starting..." << std::endl;
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
@@ -58,7 +62,8 @@ Frame& RayCaster::rayCast() {
 
 			Ray ray = Ray(ray_start, ray_dir);
 
-			ray_current = Volume::intCoords(ray_start);
+			ray_current = ray_start;
+			ray_current_int = Volume::intCoords(ray_current);
 
 			if (!vol.isPointInVolume(ray_current)) {
 				mistake(output_vertices_global, output_normals_global);
@@ -68,16 +73,19 @@ Frame& RayCaster::rayCast() {
 			while (vol.isPointInVolume(ray_current)) {
 				do {
 					ray_previous = ray_current;
-					ray_current = Volume::intCoords(ray.next());
+					ray_previous_int == Volume::intCoords(ray_previous);
 
-				} while (ray_previous == ray_current);
+					ray_current = ray.next();
+					ray_current_int = Volume::intCoords(ray_current);
+
+				} while (ray_previous_int == ray_current_int);
 					
 				if (!vol.isInterpolationPossible(ray_current)) {
 					mistake(output_vertices_global, output_normals_global);
 					break;
 				}
 
-				if (vol.get(ray_previous).getValue() >= 0 && vol.get(ray_current).getValue() <= 0) {
+				if (vol.get(ray_previous_int).getValue() >= 0 && vol.get(ray_current_int).getValue() <= 0) {
 					sdf_1 = vol.trilinearInterpolation(ray_previous);
 					sdf_2 = vol.trilinearInterpolation(ray_current);
 
@@ -99,10 +107,12 @@ Frame& RayCaster::rayCast() {
 	}
 
 	Frame result = Frame(frame);
-	result.mVerticesGlobal = output_vertices_global;
-	result.mNormalsGlobal = output_normals_global;
-	result.mVertices = frame.transformPoints(output_vertices_global, worldToCamera);
-	result.mNormals = frame.rotatePoints(output_normals_global, rotationMatrix);
+	//result.mVerticesGlobal = output_vertices_global;
+	//result.mNormalsGlobal = &output_normals_global;
+	//result.mVertices = frame.transformPoints(output_vertices_global, worldToCamera);
+	//result.mNormals = frame.rotatePoints(output_normals_global, rotationMatrix);
+
+	std::cout << "Ray Cast done!" << std::endl;
 
 	return result;
 }
