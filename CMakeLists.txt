@@ -59,6 +59,7 @@ link_directories(${FreeImage_LIBRARY_DIR})
 add_executable(kinect_fusion ${SOURCES} ${HEADERS})
 target_include_directories(kinect_fusion PUBLIC ${Eigen3_INCLUDE_DIR} ${FreeImage_INCLUDE_DIR})
 target_link_libraries(kinect_fusion general freeimage)
+target_compile_options(kinect_fusion PUBLIC -expt-relaxed-constexpr)
 
 # On Windows copy dll to executable folder
 if(WIN32)

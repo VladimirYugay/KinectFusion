@@ -4,7 +4,8 @@
 
 #include "CUDAICPWrapper.cuh"
 
-__global__ void fillSystem(
+__global__
+void fillSystem(
     float *x, float* y, float *n, int ptsNum, float *A, float*b) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < ptsNum) {
@@ -21,12 +22,74 @@ __global__ void fillSystem(
     }
 }
 
+__global__
+void findCorr(Vector3f* prevV, int prevSize) {
+
+    printf("VERTICES FROM CUDA");
+}
+
 namespace CUDA {
+
+    int* findCorrespondences(
+        const Frame &prevFrame,
+        const Frame &curFrame,
+        const Matrix4f &estimatedPose) {
+
+        Vector3f* dPrevV;
+        Vector3f* dPrevN;
+        Vector3f* dCurV;
+        Vector3f* dCurN;
+        Matrix4f* dExtrinsics;
+        Matrix3f* dRotation;
+        size_t vSize = sizeof(Vector3f);
+
+        cudaMalloc(&dPrevV, vSize * prevFrame.getVertexCount());
+        cudaMalloc(&dPrevN, vSize * prevFrame.getVertexCount());
+        cudaMalloc(&dCurN, vSize * curFrame.getVertexCount());
+        cudaMalloc(&dCurV, vSize * curFrame.getVertexCount());
+        cudaMalloc(&dExtrinsics, sizeof(Matrix4f));
+        cudaMalloc(&dRotation, sizeof(Matrix3f));
+
+        cudaMemcpy(
+            dPrevV,
+            prevFrame.getVertices().data(),
+            vSize * prevFrame.getVertexCount(), cudaMemcpyHostToDevice);
+
+        cudaMemcpy(
+            dPrevN,
+            prevFrame.getNormals().data(),
+            vSize * prevFrame.getVertexCount(), cudaMemcpyHostToDevice);
+
+        cudaMemcpy(
+            dCurV,
+            prevFrame.getVertices().data(),
+            vSize * curFrame.getVertexCount(), cudaMemcpyHostToDevice);
+
+        cudaMemcpy(
+            dCurN,
+            prevFrame.getVertices().data(),
+            vSize * curFrame.getVertexCount(), cudaMemcpyHostToDevice);
+
+        findCorr<<<1, 256>>>(
+            dPrevV, prevFrame.getVertexCount());
+
+
+        cudaFree(dPrevV);
+        cudaFree(dPrevN);
+        cudaFree(dCurV);
+        cudaFree(dCurN);
+        cudaFree(dExtrinsics);
+        cudaFree(dRotation);
+        return 0;
+
+    }
+
     void createEquations(
         const float *sourcePts,
         const float *targetPts,
         const float *targetNrmls,
         int n, float *A, float *b) {
+
         float *dSourcePts, *dTargetPts, *dTargetNrmls;
         float *dA, *db;
         size_t size = sizeof(float);

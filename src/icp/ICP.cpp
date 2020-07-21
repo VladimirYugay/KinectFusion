@@ -52,6 +52,10 @@ Matrix4f ICP::estimatePose(
         sourcePoints, targetPoints, targetNormals,
         nPoints, cudaA, cudab);
 
+    auto mat = Matrix4f::Identity(4, 4);
+    CUDA::findCorrespondences(
+        prevFrame, curFrame, mat);
+
     // Wrap back all the arrays to the eigen format to use the solver
 
     std::cout << "Constructed system on CUDA" << std::endl;

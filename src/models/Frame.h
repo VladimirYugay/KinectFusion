@@ -19,6 +19,8 @@ class Frame {
         int depthWidth, int depthHeight);
     Eigen::Vector3f getVertex(size_t idx) const;
     Eigen::Vector3f getNormal(size_t idx) const;
+    std::vector<Eigen::Vector3f> getVertices() const;
+    std::vector<Eigen::Vector3f> getNormals() const;
     int getVertexCount() const;
 
  private:

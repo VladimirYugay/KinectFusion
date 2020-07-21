@@ -14,6 +14,7 @@ class ICP {
     Matrix4f estimatePose(
         const std::vector<std::pair<size_t, size_t>>& correspondenceIds,
         int iterationsNum = 1);
+    
  private:
     const Frame& prevFrame;
     const Frame& curFrame;

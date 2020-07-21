@@ -18,6 +18,14 @@ Frame::Frame(const float* depthMap,
     std::cout << "Frame created!" << std::endl;
 }
 
+std::vector<Eigen::Vector3f> Frame::getVertices() const {
+    return mVertices;
+}
+
+std::vector<Eigen::Vector3f> Frame::getNormals() const {
+    return mNormals;
+}
+
 Eigen::Vector3f Frame::getVertex(size_t idx) const {
     return mVertices[idx];
 }
