@@ -42,28 +42,34 @@ Matrix4f ICP::estimatePose(
         targetNormals[3 * i + 2] = n(2);
     }
 
-    std::cout << "Source points: " << nPoints << std::endl;
-    for (int i = 0; i < nPoints * 3; i++) {
-        std::cout << sourcePoints[i] << std::endl;
-    }
-
     // Creates a system of linear equations
-    CUDA::createEquations(
-        sourcePoints, targetPoints, targetNormals,
-        nPoints, cudaA, cudab);
+    // CUDA::createEquations(
+    //     sourcePoints, targetPoints, targetNormals,
+    //     nPoints, cudaA, cudab);
 
     auto mat = Matrix4f::Identity(4, 4);
-    CUDA::findCorrespondences(
-        prevFrame, curFrame, mat);
+
+    Vector3f* pointer = prevFrame.getVerticesPtr();
+    std::cout << "Before CUDA " << pointer[302990] << std::endl;
+
+    CUDA::testFindCorrespondences(
+        prevFrame.getVerticesPtr(), prevFrame.getNormalsPtr(),
+        prevFrame.getVertexCount(), prevFrame.getWidth(), prevFrame.getHeight(),
+        curFrame.getVerticesPtr(), curFrame.getNormalsPtr(),
+        curFrame.getVertexCount(), curFrame.getWidth(), curFrame.getHeight(),
+        mat, mat);
+
+    // CUDA::findCorrespondences(
+    //     prevFrame, curFrame, mat, mat);
 
     // Wrap back all the arrays to the eigen format to use the solver
 
-    std::cout << "Constructed system on CUDA" << std::endl;
-    for (int i = 0; i < nPoints; i++) {
-        std::cout << cudaA[i] << " " << cudaA[i + 1] << " "
-        << cudaA[i + 2] << " " << cudaA[i + 3] << " "
-        << cudaA[i + 4] << " " << cudaA[i + 5] << std::endl;
-    }
+    // std::cout << "Constructed system on CUDA" << std::endl;
+    // for (int i = 0; i < nPoints; i++) {
+    //     std::cout << cudaA[i] << " " << cudaA[i + 1] << " "
+    //     << cudaA[i + 2] << " " << cudaA[i + 3] << " "
+    //     << cudaA[i + 4] << " " << cudaA[i + 5] << std::endl;
+    // }
 
     MatrixXf A = MatrixXf::Zero(nPoints, 6);
     VectorXf b = VectorXf::Zero(nPoints);
@@ -81,8 +87,8 @@ Matrix4f ICP::estimatePose(
         A(i, 5) = n(2);
         b(i) = n.dot(y) - n.dot(x);
     }
-    std::cout << "Constructed system without CUDA" << std::endl;
-    std::cout << A << std::endl;
+    // std::cout << "Constructed system without CUDA" << std::endl;
+    // std::cout << A << std::endl;
 
     VectorXf x(6);
     x = A.bdcSvd(ComputeThinU | ComputeThinV).solve(b);

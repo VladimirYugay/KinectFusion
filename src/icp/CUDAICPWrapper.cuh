@@ -10,8 +10,15 @@ namespace CUDA {
     int* findCorrespondences(
         const Frame &prevFrame,
         const Frame &curFrame,
-        const Matrix4f &estimatedPose
-    );
+        const Matrix4f &extrinsics,
+        const Matrix4f &pose);
+
+    int* testFindCorrespondences(
+        const Vector3f* prevV, const Vector3f* prevN,
+        int prevSize, int prevWidth, int prevHeight,
+        const Vector3f* curV, const Vector3f* curN,
+        int curSize, int curWidth, int curHeight,
+        const Matrix4f extrinsics, const Matrix4f pose);
 
     void createEquations(
         const float* sourcePoints,

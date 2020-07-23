@@ -17,11 +17,14 @@ class Frame {
         const Eigen::Matrix4f &depthExtrinsicsInv,
         const Eigen::Matrix4f &trajectoryInv,
         int depthWidth, int depthHeight);
+
     Eigen::Vector3f getVertex(size_t idx) const;
     Eigen::Vector3f getNormal(size_t idx) const;
-    std::vector<Eigen::Vector3f> getVertices() const;
-    std::vector<Eigen::Vector3f> getNormals() const;
+    Vector3f* getVerticesPtr() const;
+    Vector3f* getNormalsPtr() const;
     int getVertexCount() const;
+    int getWidth() const;
+    int getHeight() const;
 
  private:
     void computeVertexMap(const float* depthMap,
@@ -30,4 +33,7 @@ class Frame {
     void computeNormalMap(int depthWidth, int depthHeight);
     std::vector<Eigen::Vector3f> mVertices;
     std::vector<Eigen::Vector3f> mNormals;
+    Eigen::Matrix4f mExtrinsics;
+    int mWidth;
+    int mHeight;
 };

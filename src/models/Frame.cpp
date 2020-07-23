@@ -10,20 +10,23 @@ Frame::Frame() {}
 Frame::Frame(const float* depthMap,
             const BYTE* colorMap,
             const Eigen::Matrix3f &depthIntrinsics,
-            const Eigen::Matrix4f &depthExtrinsicsInv,
+            const Eigen::Matrix4f &depthExtrinsics,
             const Eigen::Matrix4f &trajectoryInv,
             int depthWidth, int depthHeight) {
     computeVertexMap(depthMap, depthIntrinsics, depthWidth, depthHeight);
     computeNormalMap(depthWidth, depthHeight);
+    mExtrinsics = depthExtrinsics;
+    mWidth = depthWidth;
+    mHeight = depthHeight;
     std::cout << "Frame created!" << std::endl;
 }
 
-std::vector<Eigen::Vector3f> Frame::getVertices() const {
-    return mVertices;
+Vector3f* Frame::getVerticesPtr() const {
+    return (Vector3f*)&mVertices[0];
 }
 
-std::vector<Eigen::Vector3f> Frame::getNormals() const {
-    return mNormals;
+Vector3f* Frame::getNormalsPtr() const {
+    return (Vector3f*)&mNormals[0];
 }
 
 Eigen::Vector3f Frame::getVertex(size_t idx) const {
@@ -37,6 +40,15 @@ Eigen::Vector3f Frame::getNormal(size_t idx) const {
 int Frame::getVertexCount() const {
     return mVertices.size();
 }
+
+int Frame::getWidth() const {
+    return mWidth;
+}
+
+int Frame::getHeight() const {
+    return mHeight;
+}
+
 
 void Frame::computeVertexMap(const float* depthMap,
     const Eigen::Matrix3f &depthIntrinsics,

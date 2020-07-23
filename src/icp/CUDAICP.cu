@@ -23,66 +23,172 @@ void fillSystem(
 }
 
 __global__
-void findCorr(Vector3f* prevV, int prevSize) {
+void testFindCorr(
+    Vector3f* prevV, Vector3f* prevN,
+    int prevSize, int prevWidth, int prevHeight,
+    Vector3f* curV, Vector3f* curN,
+    int curSize, int curWidth, int curHeight,
+    Matrix4f extrinsics, Matrix4f pose,
+    int* corr) {
 
-    printf("VERTICES FROM CUDA");
+        printf("CUDA \n");
+    }
+
+__global__
+void cu_dot(Eigen::Vector3f *v1, Eigen::Vector3f *v2, double *out, size_t N) {
+
+    for (int i = 0; i < N; i++) {
+        out[i] = v1[i].dot(v2[i]);
+    }
+    return;
 }
 
 namespace CUDA {
 
-    int* findCorrespondences(
-        const Frame &prevFrame,
-        const Frame &curFrame,
-        const Matrix4f &estimatedPose) {
+    int* testFindCorrespondences(
+        const Vector3f* prevV, const Vector3f* prevN,
+        int prevSize, int prevWidth, int prevHeight,
+        const Vector3f* curV, const Vector3f* curN,
+        int curSize, int curWidth, int curHeight,
+        const Matrix4f extrinsics, const Matrix4f pose) {
 
         Vector3f* dPrevV;
         Vector3f* dPrevN;
-        Vector3f* dCurV;
         Vector3f* dCurN;
-        Matrix4f* dExtrinsics;
-        Matrix3f* dRotation;
+        Vector3f* dCurV;
         size_t vSize = sizeof(Vector3f);
 
-        cudaMalloc(&dPrevV, vSize * prevFrame.getVertexCount());
-        cudaMalloc(&dPrevN, vSize * prevFrame.getVertexCount());
-        cudaMalloc(&dCurN, vSize * curFrame.getVertexCount());
-        cudaMalloc(&dCurV, vSize * curFrame.getVertexCount());
-        cudaMalloc(&dExtrinsics, sizeof(Matrix4f));
-        cudaMalloc(&dRotation, sizeof(Matrix3f));
+        cudaMalloc((void**)&dPrevV, vSize * prevSize);
+        cudaMalloc((void**)&dPrevN, vSize * prevSize);
+        cudaMalloc((void**)&dCurV, vSize * curSize);
+        cudaMalloc((void**)&dCurN, vSize * curSize);
 
-        cudaMemcpy(
-            dPrevV,
-            prevFrame.getVertices().data(),
-            vSize * prevFrame.getVertexCount(), cudaMemcpyHostToDevice);
+        cudaMemcpy(dPrevV, prevV, vSize * prevSize, cudaMemcpyHostToDevice);
+        cudaMemcpy(dPrevN, prevN, vSize * prevSize, cudaMemcpyHostToDevice);
+        cudaMemcpy(dCurV, curV, vSize * curSize, cudaMemcpyHostToDevice);
+        cudaMemcpy(dCurN, curN, vSize * curSize, cudaMemcpyHostToDevice);
 
-        cudaMemcpy(
-            dPrevN,
-            prevFrame.getNormals().data(),
-            vSize * prevFrame.getVertexCount(), cudaMemcpyHostToDevice);
+        int corrSize = 2 * std::max(prevSize, curSize);
+        int* corr = new int[corrSize];
+        int* dCorr;
+        cudaMalloc((void**)&dCorr, corrSize * sizeof(int));
 
-        cudaMemcpy(
-            dCurV,
-            prevFrame.getVertices().data(),
-            vSize * curFrame.getVertexCount(), cudaMemcpyHostToDevice);
+        testFindCorr<<<1, 1>>>(
+            dPrevV, dPrevN,
+            prevSize, prevWidth, prevHeight,
+            dCurV, dCurN,
+            curSize, curWidth, curHeight,
+            extrinsics, pose,
+            dCorr);
 
-        cudaMemcpy(
-            dCurN,
-            prevFrame.getVertices().data(),
-            vSize * curFrame.getVertexCount(), cudaMemcpyHostToDevice);
+        cudaMemcpy(corr, dCorr, corrSize * sizeof(int), cudaMemcpyDeviceToHost);
 
-        findCorr<<<1, 256>>>(
-            dPrevV, prevFrame.getVertexCount());
+        // int N = 1;
+        // Eigen::Vector3f *a = new Eigen::Vector3f[N];
+        // Eigen::Vector3f *b = new Eigen::Vector3f[N];
+        // double *c = new double[N];
+
+        // for (int i = 0; i < N; i++) {
+        //     a[i] = Vector3f(1, 1, 1);
+        //     b[i] = Vector3f(2, 2, 2);
+        //     c[i] = 0.0;
+        // }
+
+        // Eigen::Vector3f *da;
+        // Eigen::Vector3f *db;
+        // double *dc;
+
+        // cudaMalloc((void**)&da, sizeof(Eigen::Vector3f)*N);
+        // cudaMalloc((void**)&db, sizeof(Eigen::Vector3f)*N);
+        // cudaMalloc((void**)&dc, sizeof(double)*N);
+
+        // cudaMemcpy(da, a, sizeof(Eigen::Vector3f)*N, cudaMemcpyHostToDevice);
+        // cudaMemcpy(db, b, sizeof(Eigen::Vector3f)*N, cudaMemcpyHostToDevice);
+        // cudaMemcpy(dc, c, sizeof(double)*N, cudaMemcpyHostToDevice);
+
+        // cu_dot<<<1, 1>>>(da, db, dc, N);
+
+        // cudaMemcpy(c, dc, sizeof(double)*N, cudaMemcpyDeviceToHost);
+        // std::cout << "After CUDA: " << c[0] << std::endl;
 
 
-        cudaFree(dPrevV);
-        cudaFree(dPrevN);
-        cudaFree(dCurV);
-        cudaFree(dCurN);
-        cudaFree(dExtrinsics);
-        cudaFree(dRotation);
         return 0;
-
     }
+
+    // int* findCorrespondences(
+    //     const Frame &prevFrame,
+    //     const Frame &curFrame,
+    //     const Matrix4f &extrinsics,
+    //     const Matrix4f &pose) {
+
+    //     Vector3f* dPrevV;
+    //     Vector3f* dPrevN;
+    //     Vector3f* dCurV;
+    //     Vector3f* dCurN;
+    //     Matrix4f* dExtrinsics;
+    //     Matrix4f* dPose;
+    //     size_t vSize = sizeof(Vector3f);
+
+    //     Vector3f* rawN = prevFrame.getVertices().data();
+    //     // for (int i = 0; i < prevFrame.getVertexCount(); i++) {
+    //     //     printf("Almost there: %d \n", rawN[i](0));
+    //     // }
+    //     // printf("Almost Inside CUDA: %d\n", rawN[302990](0));
+    //     // printf("Almost Inside CUDA: %d\n", rawN[302990]);
+    //     // printf("Almost Inside CUDA: %d\n", rawN[302990]);
+
+    //     cudaMalloc(&dPrevN, vSize * prevFrame.getVertexCount());
+    //     cudaMalloc(&dCurN, vSize * curFrame.getVertexCount());
+    //     cudaMalloc(&dCurV, vSize * curFrame.getVertexCount());
+    //     cudaMalloc(&dExtrinsics, sizeof(Matrix4f));
+    //     cudaMalloc(&dPose, sizeof(Matrix4f));
+
+    //     cudaMemcpy(
+    //         dPrevV,
+    //         prevFrame.getVertices().data(),
+    //         vSize * prevFrame.getVertexCount(), cudaMemcpyHostToDevice);
+
+    //     cudaMemcpy(
+    //         dPrevN,
+    //         prevFrame.getNormals().data(),
+    //         vSize * prevFrame.getVertexCount(), cudaMemcpyHostToDevice);
+
+    //     cudaMemcpy(
+    //         dCurV,
+    //         prevFrame.getVertices().data(),
+    //         vSize * curFrame.getVertexCount(), cudaMemcpyHostToDevice);
+
+    //     cudaMemcpy(
+    //         dCurN,
+    //         prevFrame.getVertices().data(),
+    //         vSize * curFrame.getVertexCount(), cudaMemcpyHostToDevice);
+
+    //     cudaMemcpy(
+    //         dExtrinsics,
+    //         extrinsics.data(),
+    //         sizeof(Matrix4f),
+    //         cudaMemcpyHostToDevice);
+
+    //     cudaMemcpy(
+    //         dPose,
+    //         pose.data(),
+    //         sizeof(Matrix4f),
+    //         cudaMemcpyHostToDevice);
+
+    //     // findCorr<<<1, 1>>>(
+    //     //     dPrevV, dPrevN, prevFrame.getVertexCount(),
+    //     //     dCurV, dCurN, curFrame.getVertexCount(),
+    //     //     dExtrinsics, dPose);
+
+
+    //     cudaFree(dPrevV);
+    //     cudaFree(dPrevN);
+    //     cudaFree(dCurV);
+    //     cudaFree(dCurN);
+    //     cudaFree(dExtrinsics);
+    //     return 0;
+
+    // }
 
     void createEquations(
         const float *sourcePts,
