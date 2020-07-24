@@ -45,8 +45,7 @@ int main() {
       float* depthMap = sensor.GetDepth();
       BYTE* colorMap = sensor.GetColorRGBX();
       Matrix3f depthIntrinsics = sensor.GetDepthIntrinsics();
-      Matrix3f depthIntrinsicsInv = depthIntrinsics.inverse();
-      Matrix4f depthExtrinsicsInv = sensor.GetDepthExtrinsics().inverse();
+      Matrix4f depthExtrinsics = sensor.GetDepthExtrinsics();
       Matrix4f trajectory = sensor.GetTrajectory();
       Matrix4f trajectoryInv = sensor.GetTrajectory().inverse();
       int depthHeight = sensor.GetDepthImageHeight();
@@ -55,10 +54,10 @@ int main() {
       Matrix4f pose, mat;
       std::stringstream ss;
 
-      std::cout << trajectory;
+      //std::cout << trajectory;
 
       Frame curFrame =
-          Frame(depthMap, colorMap, depthIntrinsicsInv, depthExtrinsicsInv,
+          Frame(depthMap, colorMap, depthIntrinsics, depthExtrinsics,
               trajectoryInv, depthWidth, depthHeight);
       // Do the job
       // test run for pose estimation, uncomment to run

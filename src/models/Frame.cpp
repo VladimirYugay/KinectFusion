@@ -22,7 +22,7 @@ Frame::Frame(const Frame& other) {
 
 Frame::Frame(const float* depthMap, const BYTE* colorMap,
     const Eigen::Matrix3f& depthIntrinsics,
-    const Eigen::Matrix4f& depthExtrinsicsInv,
+    const Eigen::Matrix4f& depthExtrinsics,
     const Eigen::Matrix4f& trajectoryInv,
     int depthWidth,
     int depthHeight)
@@ -30,7 +30,7 @@ Frame::Frame(const float* depthMap, const BYTE* colorMap,
 
     computeVertexMap(depthMap, depthIntrinsics, depthWidth, depthHeight);
     computeNormalMap(depthWidth, depthHeight);
-    setExtrinsicMatrix(depthExtrinsicsInv.inverse());
+    setExtrinsicMatrix(depthExtrinsics);
 
     intrinsicMatrix = depthIntrinsics;
     std::cout << "Frame created!" << std::endl;
@@ -68,8 +68,9 @@ Eigen::Vector3f Frame::projectPointIntoFrame(const Eigen::Vector3f& point) {
 
 void Frame::setExtrinsicMatrix(const Eigen::Matrix4f& extMatrix) {
     extrinsicMatrix = extMatrix;
-    const auto rotation = extMatrix.block(0, 0, 3, 3);
-    mVerticesGlobal = std::make_shared<std::vector<Eigen::Vector3f>>(transformPoints(*mVertices, extrinsicMatrix));
+    Eigen::Matrix4f extrinsicMatrixInv = extrinsicMatrix.inverse();
+    const auto rotation = extrinsicMatrixInv.block(0, 0, 3, 3);
+    mVerticesGlobal = std::make_shared<std::vector<Eigen::Vector3f>>(transformPoints(*mVertices, extrinsicMatrixInv));
     mNormalsGlobal = std::make_shared<std::vector<Eigen::Vector3f>>(rotatePoints(*mNormals, rotation));
 }
 

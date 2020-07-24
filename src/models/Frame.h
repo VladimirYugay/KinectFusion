@@ -17,8 +17,8 @@ public:
     Frame();
     Frame(const Frame& other);
     Frame(const float* depthMap, const BYTE* colorMap,
-        const Eigen::Matrix3f& depthIntrinsicsInverse,
-        const Eigen::Matrix4f& depthExtrinsicsInv,
+        const Eigen::Matrix3f& depthIntrinsics,
+        const Eigen::Matrix4f& depthExtrinsics,
         const Eigen::Matrix4f& trajectoryInv, int depthWidth, int depthHeight);
     Eigen::Vector3f getVertex(size_t idx) const;
     Eigen::Vector3f getNormal(size_t idx) const;

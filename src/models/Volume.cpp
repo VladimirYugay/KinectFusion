@@ -172,7 +172,7 @@ void Volume::integrate(Frame frame) {
 	int width = frame.getFrameWidth();
 	int height = frame.getFrameHeight();
 
-	std::cout << intrinsic << std::endl;
+	//std::cout << intrinsic << std::endl;
 
 	// subscripts: g - global coordinate system | c - camera coordinate system | i - image space
 	// short notations: V - vector | P - point | sdf - signed distance field value | tsdf - truncated sdf 
@@ -198,7 +198,7 @@ void Volume::integrate(Frame frame) {
 				Pc = Frame::transformPoint(Pg, worldToCamera);
 				Pi = Frame::perspectiveProjection(Pc, intrinsic);
 
-				std::cout << Pg << std::endl << Pc << std::endl << Pi << std::endl;
+				//std::cout << Pg << std::endl << Pc << std::endl << Pi << std::endl;
 
 				if (frame.containsImgPoint(Pi)) {
 
@@ -209,7 +209,7 @@ void Volume::integrate(Frame frame) {
 					if (depth == MINF)
 						continue;
 
-					std::cout << "Odbok!!\n";
+					//std::cout << "Odbok!!\n";
 
 					// calculate the sdf value
 					lambda = (Pc / Pc[2]).norm();
@@ -246,7 +246,7 @@ void Volume::integrate(Frame frame) {
 					vol[getPosFromTuple(i, j, k)].setValue((value * weight + tsdf * tsdf_weight) / (weight + tsdf_weight));
 					vol[getPosFromTuple(i, j, k)].setWeight(weight + tsdf_weight);
 
-					std::cout << value << std::endl;
+					//std::cout << vol[getPosFromTuple(i, j, k)].getValue() << std::endl;
 				}
 
 			}

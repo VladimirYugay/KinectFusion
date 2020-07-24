@@ -32,7 +32,7 @@ Frame& RayCaster::rayCast() {
 	int width = frame.getFrameWidth();
 	int height = frame.getFrameHeight();
 ;
-	Vector3f ray_start, ray_dir, ray_current, ray_previous;
+	Vector3f ray_start, ray_dir, ray_current, ray_previous, ray_next;
 	Vector3i ray_current_int, ray_previous_int;
 
 	std::shared_ptr<std::vector<Vector3f>> output_vertices_global = std::make_shared<std::vector<Vector3f>>(std::vector<Vector3f>());
@@ -58,9 +58,12 @@ Frame& RayCaster::rayCast() {
 			// calculate the direction vector as vector from camera position to the pixel(i, j)s world coordinates
 			index = i * width + j;
 
-			ray_dir = Vector3f{ float(j), float(i), 1.0f };
-			ray_dir = intrinsic_inverse * ray_dir;
-			ray_dir = rotationMatrix * ray_dir;
+			ray_next = Vector3f{ float(j), float(i), 1.0f };
+			ray_next = intrinsic_inverse * ray_next;
+			ray_next = rotationMatrix * ray_next + translation;
+			ray_next = vol.worldToGrid(ray_next);
+
+			ray_dir = ray_next - ray_start;
 			ray_dir = ray_dir.normalized();
 
 			Ray ray = Ray(ray_start, ray_dir);
@@ -102,10 +105,10 @@ Frame& RayCaster::rayCast() {
 
 					p = ray_previous - (ray_dir * sdf_1) / (sdf_2 - sdf_1);
 					v = vol.gridToWorld(p);
-					n = vol.calculateNormal(p);
+					//n = vol.calculateNormal(p);
 
 					output_vertices_global->emplace_back(v);
-					output_normals_global->emplace_back(n);
+					//output_normals_global->emplace_back(n);
 					break;
 				}
 			}
