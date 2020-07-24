@@ -2,12 +2,15 @@
 // Author: Vladimir
 #pragma once
 
+#ifndef ICP_H
+#define ICP_H
+
 #include <memory>
 #include <utility>
 #include <vector>
 
-#include "../helpers/Eigen.h"
-#include "../models/Frame.h"
+#include "Eigen.h"
+#include "Frame.h"
 
 class ICP {
  public:
@@ -27,3 +30,5 @@ class ICP {
   const double distanceThreshold;
   const double normalThreshold;
 };
+
+#endif // !ICP_H
