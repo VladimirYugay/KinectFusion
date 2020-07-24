@@ -34,12 +34,14 @@ int main() {
   }
 
   int frameCount = 0;
-  Frame prevFrame;
+  Frame curFrame, prevFrame;
   Vector3f min_point = Vector3f{ MIN_POINT };
   Vector3f max_point = Vector3f{ MAX_POINT };
 
   Volume volume = Volume(min_point, max_point, RESOLUTION, 3);
   RayCaster rc = RayCaster(volume);
+  Matrix4f identity = Matrix4f::Identity(4, 4);  // initial estimate
+  Matrix4f pose = identity;
 
   while (frameCount < MAX_FRAME_NUM && sensor.ProcessNextFrame()) {
       float* depthMap = sensor.GetDepth();
@@ -50,36 +52,38 @@ int main() {
       Matrix4f trajectoryInv = sensor.GetTrajectory().inverse();
       int depthHeight = sensor.GetDepthImageHeight();
       int depthWidth = sensor.GetDepthImageWidth();
-      Matrix4f identity = Matrix4f::Identity(4, 4);  // initial estimate
-      Matrix4f pose, mat;
       std::stringstream ss;
 
       //std::cout << trajectory;
 
-      Frame curFrame =
+      curFrame =
           Frame(depthMap, colorMap, depthIntrinsics, depthExtrinsics,
               trajectoryInv, depthWidth, depthHeight);
+
       // Do the job
       // test run for pose estimation, uncomment to run
 
+
       if (frameCount == 0) {
-          mat = identity;
+          volume.integrate(curFrame);
       }
       else {
           //std::cout << prevFrame.getVertex(302992) << std::endl;
           //std::cout << curFrame.getVertex(302992) << std::endl;
+
           ICP icp(prevFrame, curFrame, DISTANCE_THRESHOLD, ANGLE_THRESHOLD);
           // std::vector<std::pair<size_t, size_t>> correspondenceIds(
           //     {{302990, 302990}});
           std::vector<std::pair<size_t, size_t>> correspondenceIds =
-              icp.findIndicesOfCorrespondingPoints(mat);
+              icp.findIndicesOfCorrespondingPoints(pose);
           std::cout << "# corresponding points: " << correspondenceIds.size()
               << std::endl;
           std::cout << "# total number of points: "
               << curFrame.getVertexMap().size() << std::endl;
           pose = icp.estimatePose(correspondenceIds, 1);
           std::cout << pose << std::endl;
-          mat = pose;
+
+          curFrame.setExtrinsicMatrix(curFrame.getExtrinsicMatrix() * pose.inverse());
 
           volume.integrate(curFrame);
 

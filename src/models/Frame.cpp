@@ -202,22 +202,22 @@ bool Frame::writeMesh(const std::string& filename, int edgeThreshold) {
             unsigned int i2 = i * depthWidth + j + 1;
             unsigned int i3 = (i + 1) * depthWidth + j + 1;
 
-            bool valid0 = mVertices->at(i0).allFinite();
-            bool valid1 = mVertices->at(i1).allFinite();
-            bool valid2 = mVertices->at(i2).allFinite();
-            bool valid3 = mVertices->at(i3).allFinite();
+            bool valid0 = mVerticesGlobal->at(i0).allFinite();
+            bool valid1 = mVerticesGlobal->at(i1).allFinite();
+            bool valid2 = mVerticesGlobal->at(i2).allFinite();
+            bool valid3 = mVerticesGlobal->at(i3).allFinite();
 
             if (valid0 && valid1 && valid2) {
-                float d0 = (mVertices->at(i0) - mVertices->at(i1)).norm();
-                float d1 = (mVertices->at(i0) - mVertices->at(i2)).norm();
-                float d2 = (mVertices->at(i1) - mVertices->at(i2)).norm();
+                float d0 = (mVerticesGlobal->at(i0) - mVerticesGlobal->at(i1)).norm();
+                float d1 = (mVerticesGlobal->at(i0) - mVerticesGlobal->at(i2)).norm();
+                float d2 = (mVerticesGlobal->at(i1) - mVerticesGlobal->at(i2)).norm();
                 if (edgeThreshold > d0 && edgeThreshold > d1 && edgeThreshold > d2)
                     mTriangles.emplace_back(Vector3f(i0, i1, i2));
             }
             if (valid1 && valid2 && valid3) {
-                float d0 = (mVertices->at(i3) - mVertices->at(i1)).norm();
-                float d1 = (mVertices->at(i3) - mVertices->at(i2)).norm();
-                float d2 = (mVertices->at(i1) - mVertices->at(i2)).norm();
+                float d0 = (mVerticesGlobal->at(i3) - mVerticesGlobal->at(i1)).norm();
+                float d1 = (mVerticesGlobal->at(i3) - mVerticesGlobal->at(i2)).norm();
+                float d2 = (mVerticesGlobal->at(i1) - mVerticesGlobal->at(i2)).norm();
                 if (edgeThreshold > d0 && edgeThreshold > d1 && edgeThreshold > d2)
                     mTriangles.emplace_back(Vector3f(i1, i3, i2));
             }
@@ -226,11 +226,11 @@ bool Frame::writeMesh(const std::string& filename, int edgeThreshold) {
 
     // Write header.
     outFile << "COFF" << std::endl;
-    outFile << mVertices->size() << " " << mTriangles.size() << " 0" << std::endl;
+    outFile << mVerticesGlobal->size() << " " << mTriangles.size() << " 0" << std::endl;
 
     // Save vertices.
-    for (unsigned int i = 0; i < mVertices->size(); i++) {
-        const auto& vertex = mVertices->at(i);
+    for (unsigned int i = 0; i < mVerticesGlobal->size(); i++) {
+        const auto& vertex = mVerticesGlobal->at(i);
         if (vertex.allFinite())
             outFile << vertex.x() << " " << vertex.y() << " " << vertex.z() << " "
             << int(colorMap[4 * i]) << " " << int(colorMap[4 * i + 1]) << " " << int(colorMap[4 * i + 2]) << " " << int(colorMap[4 * i + 3]) << std::endl;

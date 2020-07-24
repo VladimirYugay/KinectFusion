@@ -58,13 +58,18 @@ Frame& RayCaster::rayCast() {
 			// calculate the direction vector as vector from camera position to the pixel(i, j)s world coordinates
 			index = i * width + j;
 
-			ray_next = Vector3f{ float(j), float(i), 1.0f };
+			ray_dir = Vector3f{ float(j), float(i), 1.0f };
+			ray_dir = intrinsic_inverse * ray_dir;
+			ray_dir = rotationMatrix * ray_dir;
+			ray_dir = ray_dir.normalized();
+
+			/*ray_next = Vector3f{ float(j), float(i), 1.0f };
 			ray_next = intrinsic_inverse * ray_next;
 			ray_next = rotationMatrix * ray_next + translation;
 			ray_next = vol.worldToGrid(ray_next);
 
 			ray_dir = ray_next - ray_start;
-			ray_dir = ray_dir.normalized();
+			ray_dir = ray_dir.normalized();*/
 
 			Ray ray = Ray(ray_start, ray_dir);
 
