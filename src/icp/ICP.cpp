@@ -47,7 +47,9 @@ Matrix4f ICP::estimatePose(
     //     sourcePoints, targetPoints, targetNormals,
     //     nPoints, cudaA, cudab);
 
-    auto mat = Matrix4f::Identity(4, 4);
+    auto pose = Matrix4f::Identity(4, 4);
+    auto extrinsics = Matrix4f::Identity(4, 4);
+    auto intrinsics = Matrix3f::Identity(3, 3);
 
     Vector3f* pointer = prevFrame.getVerticesPtr();
     std::cout << "Before CUDA " << pointer[302990] << std::endl;
@@ -57,7 +59,7 @@ Matrix4f ICP::estimatePose(
         prevFrame.getVertexCount(), prevFrame.getWidth(), prevFrame.getHeight(),
         curFrame.getVerticesPtr(), curFrame.getNormalsPtr(),
         curFrame.getVertexCount(), curFrame.getWidth(), curFrame.getHeight(),
-        mat, mat);
+        extrinsics, intrinsics, pose);
 
     // CUDA::findCorrespondences(
     //     prevFrame, curFrame, mat, mat);

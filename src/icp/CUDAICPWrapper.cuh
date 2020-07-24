@@ -18,7 +18,8 @@ namespace CUDA {
         int prevSize, int prevWidth, int prevHeight,
         const Vector3f* curV, const Vector3f* curN,
         int curSize, int curWidth, int curHeight,
-        const Matrix4f extrinsics, const Matrix4f pose);
+        const Matrix4f curExtrinsics, const Matrix3f curIntrinsics,
+        const Matrix4f pose);
 
     void createEquations(
         const float* sourcePoints,

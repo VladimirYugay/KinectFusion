@@ -28,17 +28,41 @@ void testFindCorr(
     int prevSize, int prevWidth, int prevHeight,
     Vector3f* curV, Vector3f* curN,
     int curSize, int curWidth, int curHeight,
-    Matrix4f extrinsics, Matrix4f pose,
-    int* corr) {
+    Matrix4f curExtrinsics, Matrix3f curIntrinsics,
+    Matrix4f pose, int* corr) {
 
-        printf("CUDA \n");
-    }
+
+        for (int i = 0; i < prevSize; i++) {
+            Vector3f pV = prevV[i];
+            Vector3f pN = prevN[i];
+            if (pV.x() != MINF && pV.y() != MINF && pV.z() != MINF &&
+                pN.x() != MINF && pN.y() != MINF && pN.z() != MINF) {
+
+                Vector3f pVGlobal =
+                    pose.block(0, 0, 3, 3) * pV + pose.block(0, 3, 3, 1);
+                Vector3f pNGlobal = pose.block(0, 0, 3, 3) * pN;
+                Vector3f pVCurrent = curExtrinsics.block(0, 0, 3, 3) * pVGlobal
+                    + curExtrinsics.block(0, 3, 3, 1);
+                Vector3f pVCurrentImg = curIntrinsics * pVCurrent;
+                Vector2i pVCurrentPx = Vector2i(MINF, MINF);
+                if (pVCurrentImg.z() != 0) {
+                    pVCurrentPx.x() = pVCurrentImg.x() / pVCurrentImg.z();
+                    pVCurrentPx.y() = pVCurrentImg.y() / pVCurrentImg.z();
+                }
+            }
+        }
+
+}
 
 __global__
 void cu_dot(Eigen::Vector3f *v1, Eigen::Vector3f *v2, double *out, size_t N) {
 
     for (int i = 0; i < N; i++) {
+        if (v1[i].x() == MINF) {
+            printf("HAPPY \n");
+        }
         out[i] = v1[i].dot(v2[i]);
+        // out[i] = v1[i].dot(v2[i]);
     }
     return;
 }
@@ -50,7 +74,8 @@ namespace CUDA {
         int prevSize, int prevWidth, int prevHeight,
         const Vector3f* curV, const Vector3f* curN,
         int curSize, int curWidth, int curHeight,
-        const Matrix4f extrinsics, const Matrix4f pose) {
+        const Matrix4f extrinsics, const Matrix3f intrinsics,
+        const Matrix4f pose) {
 
         Vector3f* dPrevV;
         Vector3f* dPrevN;
@@ -78,8 +103,8 @@ namespace CUDA {
             prevSize, prevWidth, prevHeight,
             dCurV, dCurN,
             curSize, curWidth, curHeight,
-            extrinsics, pose,
-            dCorr);
+            extrinsics, intrinsics,
+            pose, dCorr);
 
         cudaMemcpy(corr, dCorr, corrSize * sizeof(int), cudaMemcpyDeviceToHost);
 
@@ -89,7 +114,7 @@ namespace CUDA {
         // double *c = new double[N];
 
         // for (int i = 0; i < N; i++) {
-        //     a[i] = Vector3f(1, 1, 1);
+        //     a[i] = Vector3f(MINF, 1, 1);
         //     b[i] = Vector3f(2, 2, 2);
         //     c[i] = 0.0;
         // }
