@@ -36,6 +36,10 @@ Frame::Frame(const float* depthMap, const BYTE* colorMap,
     std::cout << "Frame created!" << std::endl;
 }
 
+Eigen::Vector3f Frame::getVertexGlobal(size_t idx) const { return mVerticesGlobal->at(idx); }
+
+Eigen::Vector3f Frame::getNormalGlobal(size_t idx) const { return mNormalsGlobal->at(idx); }
+
 Eigen::Vector3f Frame::getVertex(size_t idx) const { return mVertices->at(idx); }
 
 Eigen::Vector3f Frame::getNormal(size_t idx) const { return mNormals->at(idx); }

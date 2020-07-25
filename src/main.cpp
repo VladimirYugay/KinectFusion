@@ -74,13 +74,8 @@ int main() {
           ICP icp(prevFrame, curFrame, DISTANCE_THRESHOLD, ANGLE_THRESHOLD);
           // std::vector<std::pair<size_t, size_t>> correspondenceIds(
           //     {{302990, 302990}});
-          std::vector<std::pair<size_t, size_t>> correspondenceIds =
-              icp.findIndicesOfCorrespondingPoints(pose);
-          std::cout << "# corresponding points: " << correspondenceIds.size()
-              << std::endl;
-          std::cout << "# total number of points: "
-              << curFrame.getVertexMap().size() << std::endl;
-          pose = icp.estimatePose(correspondenceIds, 1);
+
+          pose = icp.estimatePose(pose, 10);
           std::cout << pose << std::endl;
 
           curFrame.setExtrinsicMatrix(curFrame.getExtrinsicMatrix() * pose.inverse());
