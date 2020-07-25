@@ -71,6 +71,11 @@ Frame& RayCaster::rayCast() {
 			ray_dir = ray_next - ray_start;
 			ray_dir = ray_dir.normalized();*/
 
+			if (!ray_dir.allFinite() || ray_dir == Vector3f{ 0.0f, 0.0f, 0.0f }) {
+				mistake(*output_vertices_global, *output_normals_global);
+				continue;
+			}
+
 			Ray ray = Ray(ray_start, ray_dir);
 
 			ray_current = ray_start;
@@ -82,10 +87,10 @@ Frame& RayCaster::rayCast() {
 			}
 
 			while (true) {//vol.isPointInVolume(ray_current)) {
-				do {
-					ray_previous = ray_current;
-					ray_previous_int = ray_current_int;
+				ray_previous = ray_current;
+				ray_previous_int = ray_current_int;
 
+				do {
 					//std::cout << ray_current << std::endl;
 
 					ray_current = ray.next();

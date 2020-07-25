@@ -127,7 +127,7 @@ void Frame::computeVertexMap(const float* depthMap,
 
     mVertices = std::make_shared<std::vector<Eigen::Vector3f>> 
         (
-            std::vector<Eigen::Vector3f>(depthHeight * depthWidth)
+            std::vector<Eigen::Vector3f>()
         );
     mVertices->reserve(depthHeight * depthWidth);
 
@@ -136,11 +136,11 @@ void Frame::computeVertexMap(const float* depthMap,
             size_t idx = i * depthWidth + j;
             float depth = depthMap[idx];
             if (depth != MINF) {
-                mVertices->at(idx) =
-                    Vector3f((j - cX) / fX * depth, (i - cY) / fY * depth, depth);
+                mVertices->emplace_back(
+                    Vector3f((j - cX) / fX * depth, (i - cY) / fY * depth, depth));
             }
             else {
-                Vector3f(MINF, MINF, MINF);
+                mVertices->emplace_back(Vector3f(MINF, MINF, MINF));
             }
         }
     }
@@ -150,7 +150,7 @@ void Frame::computeNormalMap(int depthWidth, int depthHeight) {
 
     mNormals = std::make_shared<std::vector<Eigen::Vector3f>>
         (
-            std::vector<Eigen::Vector3f> (depthHeight * depthWidth)
+            std::vector<Eigen::Vector3f> ()
         );
     mNormals->reserve(depthHeight * depthWidth);
 
@@ -158,17 +158,16 @@ void Frame::computeNormalMap(int depthWidth, int depthHeight) {
         for (size_t j = 0; j < depthWidth; j++) {
             size_t idx = i * depthWidth + j;
             if (i == 0 || j == 0 || i == depthHeight - 1 || j == depthWidth - 1)
-                mNormals->at(idx) = Vector3f(MINF, MINF, MINF);
+                mNormals->emplace_back(Vector3f(MINF, MINF, MINF));
             else {
                 Eigen::Vector3f du = mVertices->at(idx + 1) - mVertices->at(idx - 1);
                 Eigen::Vector3f dv =
                     mVertices->at(idx + depthWidth) - mVertices->at(idx - depthWidth);
                 if (du.allFinite() && dv.allFinite()) {
-                    mNormals->at(idx) = du.cross(dv);
-                    mNormals->at(idx).normalize();
+                    mNormals->emplace_back(du.cross(dv).normalized());
                 }
                 else {
-                    mNormals->at(idx) = Vector3f(MINF, MINF, MINF);
+                    mNormals->emplace_back(Vector3f(MINF, MINF, MINF));
                 }
             }
         }

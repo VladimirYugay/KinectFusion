@@ -222,7 +222,7 @@ void Volume::integrate(Frame frame) {
 			
 					cos_angle = ray.dot(normal) / ray.norm() / normal.norm();
 
-					tsdf_weight = cos_angle / depth; // 1; // 1 / depth;
+					tsdf_weight = 1; //cos_angle / depth; // 1; // 1 / depth;
 
 					// get the previous value and weight
 					value = vol[getPosFromTuple(i, j, k)].getValue();
