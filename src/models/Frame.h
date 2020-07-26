@@ -6,6 +6,7 @@
 #define FRAME_H
 
 #include <vector>
+#include <memory>
 
 #include "Eigen.h"
 #include "VirtualSensor.h"
@@ -29,6 +30,8 @@ public:
     std::vector<Eigen::Vector3f>& getNormalMapGlobal();
     std::vector<Eigen::Vector3f>& getVertexMap();
     std::vector<Eigen::Vector3f>& getNormalMap();
+    Vector3f* getNormalMapPtr() const;
+    Vector3f* getVertexMapPtr() const;
     int getFrameHeight();
     int getFrameWidth();
     void setExtrinsicMatrix(const Eigen::Matrix4f& extrensicMatrix);

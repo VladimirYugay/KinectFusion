@@ -11,6 +11,13 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(MACOSX TRUE)
 endif()
 
+# Enable CUDA if it's available
+include(CheckLanguage)
+check_language(CUDA)
+if (CMAKE_CUDA_COMPILER)
+    enable_language(CUDA)
+endif()
+
 # Options
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src CACHE PATH "Path to source folder")
 set(HELPERS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/helpers CACHE PATH "Path to helpers folder")
@@ -18,6 +25,7 @@ set(ICP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/icp CACHE PATH "Path to icp folder")
 set(RAYCASTER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/raycaster CACHE PATH "Path to RayCaster folder")
 set(MODELS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/models CACHE PATH "Path to models folder")
 set(LIBRARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs CACHE PATH "Path to lib folder")
+set(CUDA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda CACHE PATH "Path to cuda folder")
 set(Eigen3_INCLUDE_DIR ${LIBRARY_DIR}/eigen/ CACHE PATH "Path to Eigen source folder")
 
 
@@ -27,28 +35,30 @@ if(WIN32)
     set(FreeImage_LIBRARY_DIR ${LIBRARY_DIR}/FreeImage/x64/ CACHE PATH "Path to FreeImage .lib/.dll folder")
 endif(WIN32)
 
-# Use 
-if(MACOSX)  
+# Use
+if(MACOSX)
     set(FreeImage_INCLUDE_DIR "/usr/local/Cellar/freeimage/3.18.0/include")
     set(FreeImage_LIBRARY_DIR "/usr/local/Cellar/freeimage/3.18.0/lib")
     set(Eigen3_INCLUDE_DIR /usr/local/Cellar/eigen/3.3.7/include/eigen3)
 endif(MACOSX)
 
+message(${CUDA_DIR})
 message(${Eigen3_INCLUDE_DIR})
 
 # Include directories
-set(INCLUDE 
+set(INCLUDE
     ${SOURCE_DIR}
     ${HELPERS_DIR}
     ${ICP_DIR}
     ${MODELS_DIR}
     ${RAYCASTER_DIR}
     ${LIBRARY_DIR}
-    ${Eigen3_INCLUDE_DIR})
+    ${Eigen3_INCLUDE_DIR}
+    ${CUDA_DIR})
 
 include_directories(${INCLUDE})
 
-set(HEADERS 
+set(HEADERS
     ${HELPERS_DIR}/Eigen.h
     ${HELPERS_DIR}/FreeImageHelper.h
     ${HELPERS_DIR}/VirtualSensor.h
@@ -56,7 +66,8 @@ set(HEADERS
     ${MODELS_DIR}/Frame.h
     ${MODELS_DIR}/Volume.h
     ${RAYCASTER_DIR}/RayCaster.h
-    ${RAYCASTER_DIR}/Ray.h)
+    ${RAYCASTER_DIR}/Ray.h
+    ${CUDA_DIR}/VolumeCUDA.cuh)
 
 set(SOURCES
     ${HELPERS_DIR}/FreeImageHelper.cpp
@@ -65,12 +76,14 @@ set(SOURCES
     ${ICP_DIR}/ICP.cpp
     ${SOURCE_DIR}/main.cpp
     ${RAYCASTER_DIR}/RayCaster.cpp
-    ${RAYCASTER_DIR}/Ray.cpp)
+    ${RAYCASTER_DIR}/Ray.cpp
+    ${CUDA_DIR}/VolumeCUDA.cu)
 
 link_directories(${FreeImage_LIBRARY_DIR})
 add_executable(kinect_fusion ${SOURCES} ${HEADERS})
 target_include_directories(kinect_fusion PUBLIC ${Eigen3_INCLUDE_DIR} ${FreeImage_INCLUDE_DIR} ${INCLUDE})
 target_link_libraries(kinect_fusion general freeimage)
+target_compile_options(kinect_fusion PUBLIC -expt-relaxed-constexpr)
 
 # On Windows copy dll to executable folder
 if(WIN32)

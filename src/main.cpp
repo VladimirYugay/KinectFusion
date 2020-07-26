@@ -15,14 +15,14 @@
 #define DISTANCE_THRESHOLD 0.1
 #define EDGE_THRESHOLD 0.01
 #define ANGLE_THRESHOLD 0.5
-#define MAX_FRAME_NUM 10
+#define MAX_FRAME_NUM 2
 #define MIN_POINT -1.5f, -1.0f, -0.1f
 #define MAX_POINT 1.5f, 1.0f, 3.5f
 #define RESOLUTION 512, 512, 512
 
 int main() {
   // Make sure this path points to the data folder
-    std::string filenameIn = "../data/rgbd_dataset_freiburg1_xyz/";
+    std::string filenameIn = "../data/";
     std::string filenameBaseOut = std::string("../output/mesh_");
 
   // load video

@@ -125,9 +125,9 @@ float Volume::trilinearInterpolation(const Vector3f& p) {
 	c111 = get(start[0] + 1, start[1] + 1, start[2] + 1).getValue();
 
 	if (
-		c000 == std::numeric_limits<float>::max() || 
-		c001 == std::numeric_limits<float>::max() || 
-		c010 == std::numeric_limits<float>::max() || 
+		c000 == std::numeric_limits<float>::max() ||
+		c001 == std::numeric_limits<float>::max() ||
+		c010 == std::numeric_limits<float>::max() ||
 		c011 == std::numeric_limits<float>::max() ||
 		c100 == std::numeric_limits<float>::max() ||
 		c101 == std::numeric_limits<float>::max() ||
@@ -175,11 +175,34 @@ void Volume::integrate(Frame frame) {
 	//std::cout << intrinsic << std::endl;
 
 	// subscripts: g - global coordinate system | c - camera coordinate system | i - image space
-	// short notations: V - vector | P - point | sdf - signed distance field value | tsdf - truncated sdf 
+	// short notations: V - vector | P - point | sdf - signed distance field value | tsdf - truncated sdf
 	Vector3f Pg, Pc, ray, normal;
 	Vector2i Pi;
 	float depth, lambda, sdf, tsdf, tsdf_weight, value, weight, cos_angle;
 	uint index;
+
+    std::cout << "CUDA CALL: " << std::endl;
+    // these values and weights are equival of Voxel* vol
+    // This is a temporary fix since I don't want to break the interface
+    // of all other components by modifying Voxel class for CUDA
+    float* values = (float*)malloc(sizeof(float) * dx * dy * dz);
+    float* weights = (float*)malloc(sizeof(float) * dx * dy * dz);
+	for (int k = 0; k < dz; k++) {
+		for (int j = 0; j < dy; j++) {
+			for (int i = 0; i < dx; i++) {
+                uint idx = i * dy * dz + j * dz + k;
+                values[idx] = vol[idx].getValue();
+                weights[idx] = vol[idx].getWeight();
+            }
+        }
+    }
+
+    CUDA::integrate(
+        min, max, dx, dy, dz,
+        worldToCamera, intrinsic,
+        width, height,
+        depthMap,
+        values, weights);
 
 	std::cout << "Integrate starting..." << std::endl;
 
@@ -188,15 +211,15 @@ void Volume::integrate(Frame frame) {
 			for (int i = 0; i < dx; i++) {
 
 				// project the grid point into image space
-				//Pg = gridToWorld(i, j, k);
-				//Pc = frame.projectPointIntoFrame(Pg);
-				//Pi = frame.projectOntoImgPlane(Pc);
+				Pg = gridToWorld(i, j, k);
+				Pc = frame.projectPointIntoFrame(Pg);
+				Pi = frame.projectOntoImgPlane(Pc);
 
 				//std::cout << Pg << std::endl << Pc << std::endl << Pi << std::endl;
 
-				Pg = gridToWorld(i, j, k);
-				Pc = Frame::transformPoint(Pg, worldToCamera);
-				Pi = Frame::perspectiveProjection(Pc, intrinsic);
+				// Pg = gridToWorld(i, j, k);
+				// Pc = Frame::transformPoint(Pg, worldToCamera);
+				// Pi = Frame::perspectiveProjection(Pc, intrinsic);
 
 				//std::cout << Pg << std::endl << Pc << std::endl << Pi << std::endl;
 
@@ -216,10 +239,10 @@ void Volume::integrate(Frame frame) {
 
 					sdf = depth - ((Pg - translation) / lambda).norm();
 
-					// compute the weight as the angle between the ray from the voxel point and normal of the associated frame point devided by depth
+					// compute the weight as the angle between the ray f qrom the voxel point and normal of the associated frame point devided by depth
 					ray = Pg.normalized();
 					normal = frame.getNormal(index);
-			
+
 					cos_angle = ray.dot(normal) / ray.norm() / normal.norm();
 
 					tsdf_weight = 1; //cos_angle / depth; // 1; // 1 / depth;
@@ -257,4 +280,3 @@ void Volume::integrate(Frame frame) {
 
 
 }
-

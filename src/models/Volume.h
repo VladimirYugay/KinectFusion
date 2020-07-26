@@ -6,6 +6,7 @@
 #include <limits>
 #include "Eigen.h"
 #include "Frame.h"
+#include "../cuda/VolumeCUDA.cuh"
 
 typedef unsigned int uint;
 
@@ -60,7 +61,7 @@ private:
 	uint m_dim;
 
 public:
-	
+
 	Volume();
 	//! Initializes an empty volume dataset.
 	Volume(Vector3f& min_, Vector3f& max_, uint dx_ = 10, uint dy_ = 10, uint dz_ = 10, uint dim = 1);
@@ -93,7 +94,7 @@ public:
 
 	// trilinear interpolation of a point in voxel grid coordinates to get SDF at the point
 	float trilinearInterpolation(const Vector3f& p);
-		
+
 	// using given frame calculate TSDF values for all voxels in the grid
 	void integrate(Frame frame);
 

@@ -36,6 +36,14 @@ Frame::Frame(const float* depthMap, const BYTE* colorMap,
     std::cout << "Frame created!" << std::endl;
 }
 
+Vector3f* Frame::getVertexMapPtr() const {
+    return (Vector3f*)&((*mVertices)[0]);
+}
+
+Vector3f* Frame::getNormalMapPtr() const {
+    return (Vector3f*)&((*mNormals)[0]);
+}
+
 Eigen::Vector3f Frame::getVertexGlobal(size_t idx) const { return mVerticesGlobal->at(idx); }
 
 Eigen::Vector3f Frame::getNormalGlobal(size_t idx) const { return mNormalsGlobal->at(idx); }
@@ -125,7 +133,7 @@ void Frame::computeVertexMap(const float* depthMap,
     float cX = depthIntrinsics(0, 2);
     float cY = depthIntrinsics(1, 2);
 
-    mVertices = std::make_shared<std::vector<Eigen::Vector3f>> 
+    mVertices = std::make_shared<std::vector<Eigen::Vector3f>>
         (
             std::vector<Eigen::Vector3f>()
         );
