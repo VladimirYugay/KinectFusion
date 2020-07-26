@@ -63,13 +63,15 @@ Frame& RayCaster::rayCast() {
 			ray_dir = rotationMatrix * ray_dir;
 			ray_dir = ray_dir.normalized();
 
+			//ray_next = vol.worldToGrid(frame.getVertexGlobal(index));
+
 			/*ray_next = Vector3f{ float(j), float(i), 1.0f };
 			ray_next = intrinsic_inverse * ray_next;
 			ray_next = rotationMatrix * ray_next + translation;
 			ray_next = vol.worldToGrid(ray_next);
-
-			ray_dir = ray_next - ray_start;
-			ray_dir = ray_dir.normalized();*/
+			*/
+			//ray_dir = ray_next - ray_start;
+			//ray_dir = ray_dir.normalized();
 
 			if (!ray_dir.allFinite() || ray_dir == Vector3f{ 0.0f, 0.0f, 0.0f }) {
 				mistake(*output_vertices_global, *output_normals_global);
@@ -87,11 +89,11 @@ Frame& RayCaster::rayCast() {
 			}
 
 			while (true) {//vol.isPointInVolume(ray_current)) {
-				ray_previous = ray_current;
-				ray_previous_int = ray_current_int;
 
 				do {
 					//std::cout << ray_current << std::endl;
+					ray_previous = ray_current;
+					ray_previous_int = ray_current_int;
 
 					ray_current = ray.next();
 					ray_current_int = Volume::intCoords(ray_current);

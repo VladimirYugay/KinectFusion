@@ -98,7 +98,7 @@ std::vector<Eigen::Vector3f> Frame::transformPoints(
         if (points[idx].allFinite())
             transformed[idx] = rotation * points[idx] + translation;
         else
-            transformed[idx] = (Eigen::Vector3f(MINF, MINF, MINF));
+            transformed[idx] = Eigen::Vector3f(MINF, MINF, MINF);
     }
     return transformed;
 }
@@ -112,7 +112,7 @@ std::vector<Eigen::Vector3f> Frame::rotatePoints(
         if (points[idx].allFinite())
             transformed[idx] = rotation * points[idx];
         else
-            transformed[idx] = (Eigen::Vector3f(MINF, MINF, MINF));
+            transformed[idx] = Eigen::Vector3f(MINF, MINF, MINF);
     }
     return transformed;
 }
@@ -188,7 +188,7 @@ const BYTE* Frame::getColorMap() {
     return colorMap;
 }
 
-bool Frame::writeMesh(const std::string& filename, int edgeThreshold) {
+bool Frame::writeMesh(const std::string& filename, float edgeThreshold) {
     // Write off file.
     std::ofstream outFile(filename);
     if (!outFile.is_open()) return false;
@@ -196,7 +196,7 @@ bool Frame::writeMesh(const std::string& filename, int edgeThreshold) {
     std::cout << "Writing mesh: '" << filename << "'!" << std::endl;
 
     // Create triangles
-    std::vector<Vector3f> mTriangles;
+    std::vector<Vector3i> mTriangles;
     mTriangles.reserve((depthHeight - 1) * (depthWidth - 1) * 2);
     for (unsigned int i = 0; i < depthHeight - 1; i++) {
         for (unsigned int j = 0; j < depthWidth - 1; j++) {
@@ -212,21 +212,25 @@ bool Frame::writeMesh(const std::string& filename, int edgeThreshold) {
 
             if (valid0 && valid1 && valid2) {
                 float d0 = (mVerticesGlobal->at(i0) - mVerticesGlobal->at(i1)).norm();
+                //std::cout << d0 << std::endl;
                 float d1 = (mVerticesGlobal->at(i0) - mVerticesGlobal->at(i2)).norm();
+                //std::cout << d1 << std::endl;
                 float d2 = (mVerticesGlobal->at(i1) - mVerticesGlobal->at(i2)).norm();
+                //std::cout << d2 << std::endl;
                 if (edgeThreshold > d0 && edgeThreshold > d1 && edgeThreshold > d2)
-                    mTriangles.emplace_back(Vector3f(i0, i1, i2));
+                    mTriangles.emplace_back(Vector3i(i0, i1, i2));
             }
             if (valid1 && valid2 && valid3) {
                 float d0 = (mVerticesGlobal->at(i3) - mVerticesGlobal->at(i1)).norm();
                 float d1 = (mVerticesGlobal->at(i3) - mVerticesGlobal->at(i2)).norm();
                 float d2 = (mVerticesGlobal->at(i1) - mVerticesGlobal->at(i2)).norm();
                 if (edgeThreshold > d0 && edgeThreshold > d1 && edgeThreshold > d2)
-                    mTriangles.emplace_back(Vector3f(i1, i3, i2));
+                    mTriangles.emplace_back(Vector3i(i1, i3, i2));
             }
         }
     }
 
+    std::cout << mTriangles.size() << std::endl;
     // Write header.
     outFile << "COFF" << std::endl;
     outFile << mVerticesGlobal->size() << " " << mTriangles.size() << " 0" << std::endl;

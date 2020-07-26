@@ -39,7 +39,7 @@ public:
     const Eigen::Matrix3f getIntrinsicMatrix();
     const float* getDepthMap();
     const BYTE* getColorMap();
-    bool writeMesh(const std::string& filename, int edgeThreshold);
+    bool writeMesh(const std::string& filename, float edgeThreshold);
 
     //+++++++++++++++++++++++++++++++++++++++++++++
     static Eigen::Vector3f transformPoint(

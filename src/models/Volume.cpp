@@ -1,7 +1,6 @@
 #include "Volume.h"
 
-#define MAX_TRUNCATION 1.0f
-#define MIN_TRUNCATION 1.0f
+#define TRUNCATION 0.06f
 
 Volume::Volume() {}
 
@@ -188,15 +187,15 @@ void Volume::integrate(Frame frame) {
 			for (int i = 0; i < dx; i++) {
 
 				// project the grid point into image space
-				//Pg = gridToWorld(i, j, k);
-				//Pc = frame.projectPointIntoFrame(Pg);
-				//Pi = frame.projectOntoImgPlane(Pc);
+				Pg = gridToWorld(i, j, k);
+				Pc = frame.projectPointIntoFrame(Pg);
+				Pi = frame.projectOntoImgPlane(Pc);
 
 				//std::cout << Pg << std::endl << Pc << std::endl << Pi << std::endl;
 
-				Pg = gridToWorld(i, j, k);
-				Pc = Frame::transformPoint(Pg, worldToCamera);
-				Pi = Frame::perspectiveProjection(Pc, intrinsic);
+				//Pg = gridToWorld(i, j, k);
+				//Pc = Frame::transformPoint(Pg, worldToCamera);
+				//Pi = Frame::perspectiveProjection(Pc, intrinsic);
 
 				//std::cout << Pg << std::endl << Pc << std::endl << Pi << std::endl;
 
@@ -236,10 +235,10 @@ void Volume::integrate(Frame frame) {
 
 					// truncation of the sdf
 					if (sdf > 0) {
-						tsdf = std::min(1.0f, sdf / MAX_TRUNCATION);
+						tsdf = std::min(1.0f, sdf / TRUNCATION);
 					}
 					else {
-						tsdf = std::max(-1.0f, sdf / MIN_TRUNCATION);
+						tsdf = std::max(-1.0f, sdf / TRUNCATION);
 					}
 
 					// the new value and weight is the running average
