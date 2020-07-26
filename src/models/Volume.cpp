@@ -185,6 +185,7 @@ void Volume::integrate(Frame frame) {
     // these values and weights are equival of Voxel* vol
     // This is a temporary fix since I don't want to break the interface
     // of all other components by modifying Voxel class for CUDA
+    Vector3f* normals = frame.getNormalMapPtr();
     float* values = (float*)malloc(sizeof(float) * dx * dy * dz);
     float* weights = (float*)malloc(sizeof(float) * dx * dy * dz);
 	for (int k = 0; k < dz; k++) {
@@ -201,8 +202,23 @@ void Volume::integrate(Frame frame) {
         min, max, dx, dy, dz,
         worldToCamera, intrinsic,
         width, height,
-        depthMap,
+        depthMap, normals,
         values, weights);
+
+
+    std::cout << " GPU Result: " << std::endl;
+    int count = 0;
+    for (int i = 0; i < dx * dy * dz; i++) {
+        if (values[i] > 0 && weights[i] > 0) {
+            count++;
+            printf("Val: %f, w: %f id: %d \n",
+                values[i], weights[i], i);
+        }
+        if (count > 5) {
+            break;
+        }
+    }
+
 
 	std::cout << "Integrate starting..." << std::endl;
 
@@ -210,29 +226,37 @@ void Volume::integrate(Frame frame) {
 		for (int j = 0; j < dy; j++) {
 			for (int i = 0; i < dx; i++) {
 
+                // debug pixel
+                // if (i != 0 || j != 0 || k != 0)
+                //     return;
+
 				// project the grid point into image space
 				Pg = gridToWorld(i, j, k);
 				Pc = frame.projectPointIntoFrame(Pg);
 				Pi = frame.projectOntoImgPlane(Pc);
 
-				//std::cout << Pg << std::endl << Pc << std::endl << Pi << std::endl;
-
-				// Pg = gridToWorld(i, j, k);
-				// Pc = Frame::transformPoint(Pg, worldToCamera);
-				// Pi = Frame::perspectiveProjection(Pc, intrinsic);
-
-				//std::cout << Pg << std::endl << Pc << std::endl << Pi << std::endl;
+                // printf("CPU: %d %d \n", Pi[0], Pi[1]);
 
 				if (frame.containsImgPoint(Pi)) {
-                    printf("Pixels on CPU %d, %d \n", Pi[0], Pi[1]);
+                    // printf("Pixels on CPU %d, %d \n", Pi[0], Pi[1]);
 					// get the depth of the point
+
+                    // printf("Points CPU: %d %d %d \n", i, j, k);
+                    // printf("Pixels on CPU %d, %d \n", Pi[0], Pi[1]);
+                    // return;
+
 					index = Pi[1] * width + Pi[0];
 					depth = depthMap[index];
+
+                    // printf("CPU depth: %f \n", depth);
+                    // return;
 
 					if (depth == MINF)
 						continue;
 
-					//std::cout << "Odbok!!\n";
+                    // printf("Points CPU: %d %d %d \n", i, j, k);
+                    // printf("CPU depth: %f \n", depth);
+                    // return;
 
 					// calculate the sdf value
 					lambda = (Pc / Pc[2]).norm();
@@ -269,7 +293,11 @@ void Volume::integrate(Frame frame) {
 					vol[getPosFromTuple(i, j, k)].setValue((value * weight + tsdf * tsdf_weight) / (weight + tsdf_weight));
 					vol[getPosFromTuple(i, j, k)].setWeight(weight + tsdf_weight);
 
-					//std::cout << vol[getPosFromTuple(i, j, k)].getValue() << std::endl;
+                    // printf("Points CPU: %d %d %d \n", i, j, k);
+                    // printf("Idx CPU: %d \n", getPosFromTuple(i, j, k));
+
+					// std::cout << vol[getPosFromTuple(i, j, k)].getValue() << std::endl;
+                    // return;
 				}
 
 			}
@@ -277,6 +305,15 @@ void Volume::integrate(Frame frame) {
 	}
 
 	std::cout << "Integrate done!" << std::endl;
-
-
+    count = 0;
+    for (int i = 0; i < dx * dy * dz; i++) {
+        if (vol[i].getValue() > 0 && vol[i].getWeight() > 0) {
+            count++;
+            printf("Val: %f, w: %f id: %d \n",
+                vol[i].getValue(), vol[i].getWeight(), i);
+        }
+        if (count > 5) {
+            break;
+        }
+    }
 }

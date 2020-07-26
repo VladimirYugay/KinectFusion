@@ -12,6 +12,6 @@ namespace CUDA {
         uint dx, uint dy, uint dz,
         Matrix4f extrinsic, Matrix3f intrinsic,
         int frameWidth, int frameHeight,
-        const float* depthMap,
+        const float* depthMap, const Vector3f* normals,
         float* values, float* weights);
 }  // namespace CUDA
