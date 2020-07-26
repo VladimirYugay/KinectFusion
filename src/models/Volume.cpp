@@ -224,7 +224,7 @@ void Volume::integrate(Frame frame) {
 				//std::cout << Pg << std::endl << Pc << std::endl << Pi << std::endl;
 
 				if (frame.containsImgPoint(Pi)) {
-
+                    printf("Pixels on CPU %d, %d \n", Pi[0], Pi[1]);
 					// get the depth of the point
 					index = Pi[1] * width + Pi[0];
 					depth = depthMap[index];
