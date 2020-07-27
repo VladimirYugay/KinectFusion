@@ -174,7 +174,7 @@ Frame& RayCaster::rayCast() {
 	//frame.mNormalsGlobal = output_normals_global;
 	frame.mVertices = std::make_shared<std::vector<Vector3f>>(frame.transformPoints(*output_vertices_global, worldToCamera));
 	frame.computeNormalMap(width, height);
-	frame.mNormalsGlobal = std::make_shared<std::vector<Vector3f>>(frame.rotatePoints(frame.getNormalMap(), rotationMatrix.transpose()));
+	frame.mNormalsGlobal = std::make_shared<std::vector<Vector3f>>(frame.rotatePoints(frame.getNormalMap(), rotationMatrix));
 
 	std::cout << "RayCast done!" << std::endl;
 
