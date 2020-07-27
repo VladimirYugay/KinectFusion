@@ -51,6 +51,7 @@ Frame& RayCaster::rayCast() {
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
+			//std::cout << i << " " << j << std::endl;
 
 			// starting point is the position of the camera (translation) in grid coordinates
 			ray_start = vol.worldToGrid(translation);
@@ -58,21 +59,22 @@ Frame& RayCaster::rayCast() {
 			// calculate the direction vector as vector from camera position to the pixel(i, j)s world coordinates
 			index = i * width + j;
 
+			/*
 			ray_dir = Vector3f{ float(j), float(i), 1.0f };
 			ray_dir = intrinsic_inverse * ray_dir;
 			ray_dir = rotationMatrix * ray_dir;
 			ray_dir = ray_dir.normalized();
-
+			*/
 			//ray_next = vol.worldToGrid(frame.getVertexGlobal(index));
 
-			/*ray_next = Vector3f{ float(j), float(i), 1.0f };
+			ray_next = Vector3f{ float(j), float(i), 1.0f };
 			ray_next = intrinsic_inverse * ray_next;
 			ray_next = rotationMatrix * ray_next + translation;
 			ray_next = vol.worldToGrid(ray_next);
-			*/
-			//ray_dir = ray_next - ray_start;
-			//ray_dir = ray_dir.normalized();
-
+			
+			ray_dir = ray_next - ray_start;
+			ray_dir = ray_dir.normalized();
+			
 			if (!ray_dir.allFinite() || ray_dir == Vector3f{ 0.0f, 0.0f, 0.0f }) {
 				mistake(*output_vertices_global, *output_normals_global);
 				continue;
@@ -89,11 +91,11 @@ Frame& RayCaster::rayCast() {
 			}
 
 			while (true) {//vol.isPointInVolume(ray_current)) {
+				ray_previous = ray_current;
+				ray_previous_int = ray_current_int;
 
 				do {
 					//std::cout << ray_current << std::endl;
-					ray_previous = ray_current;
-					ray_previous_int = ray_current_int;
 
 					ray_current = ray.next();
 					ray_current_int = Volume::intCoords(ray_current);
@@ -101,12 +103,41 @@ Frame& RayCaster::rayCast() {
 				} while (ray_previous_int == ray_current_int);
 
 					
-				if (!vol.isInterpolationPossible(ray_current)) {
+				if (!vol.isInterpolationPossible(ray_previous) || !vol.isInterpolationPossible(ray_current)) {
 					mistake(*output_vertices_global, *output_normals_global);
+					break;
+				} 
+				
+				else if (vol.get(ray_previous_int).getValue() == 0) {
+					v = vol.gridToWorld(ray_previous);
+					//n = vol.calculateNormal(ray_previous);
+
+					/*
+					if (n == Vector3f{ MINF, MINF, MINF }) {
+						mistake(*output_vertices_global, *output_normals_global);
+						break;
+					}
+					*/
+					output_vertices_global->emplace_back(v);
+					//output_normals_global->emplace_back(n);
 					break;
 				}
 
-				if (vol.get(ray_previous_int).getValue() >= 0 && vol.get(ray_current_int).getValue() <= 0) {
+				else if (vol.get(ray_current_int).getValue() == 0){
+					v = vol.gridToWorld(ray_current);
+					//n = vol.calculateNormal(ray_current);
+					/*
+					if (n == Vector3f{ MINF, MINF, MINF }) {
+						mistake(*output_vertices_global, *output_normals_global);
+						break;
+					}
+					*/
+					output_vertices_global->emplace_back(v);
+					//output_normals_global->emplace_back(n);
+					break;
+				}
+				
+				else if (vol.get(ray_previous_int).getValue() > 0 && vol.get(ray_current_int).getValue() < 0) {
 					sdf_1 = vol.trilinearInterpolation(ray_previous);
 					sdf_2 = vol.trilinearInterpolation(ray_current);
 
@@ -116,9 +147,21 @@ Frame& RayCaster::rayCast() {
 					}
 
 					p = ray_previous - (ray_dir * sdf_1) / (sdf_2 - sdf_1);
+
+					if (!vol.isInterpolationPossible(p)) {
+						mistake(*output_vertices_global, *output_normals_global);
+						break;
+					}
+
+					//std::cout << ray_previous << std::endl << ray_current << std::endl << ray_dir << std::endl << sdf_1 << " " << sdf_2 << std::endl << p << std::endl;
 					v = vol.gridToWorld(p);
 					//n = vol.calculateNormal(p);
-
+					/*
+					if (n == Vector3f{ MINF, MINF, MINF }) {
+						mistake(*output_vertices_global, *output_normals_global);
+						break;
+					}
+					*/
 					output_vertices_global->emplace_back(v);
 					//output_normals_global->emplace_back(n);
 					break;
@@ -128,9 +171,10 @@ Frame& RayCaster::rayCast() {
 	}
 
 	frame.mVerticesGlobal = output_vertices_global;
-	frame.mNormalsGlobal = output_normals_global;
+	//frame.mNormalsGlobal = output_normals_global;
 	frame.mVertices = std::make_shared<std::vector<Vector3f>>(frame.transformPoints(*output_vertices_global, worldToCamera));
-	frame.mNormals = std::make_shared<std::vector<Vector3f>>(frame.rotatePoints(*output_normals_global, rotationMatrix));
+	frame.computeNormalMap(width, height);
+	frame.mNormalsGlobal = std::make_shared<std::vector<Vector3f>>(frame.rotatePoints(frame.getNormalMap(), rotationMatrix.transpose()));
 
 	std::cout << "RayCast done!" << std::endl;
 

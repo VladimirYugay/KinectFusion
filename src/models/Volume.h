@@ -196,12 +196,12 @@ public:
 	bool isInterpolationPossible(Vector3f& point) {
 		return
 			!(
-				point[0] > dx - 2 ||
-				point[1] > dy - 2 ||
-				point[2] > dz - 2 ||
-				point[0] < 1 ||
-				point[1] < 1 ||
-				point[2] < 1
+				point[0] > dx - 3 ||
+				point[1] > dy - 3 ||
+				point[2] > dz - 3 ||
+				point[0] < 2 ||
+				point[1] < 2 ||
+				point[2] < 2
 				);
 	}
 

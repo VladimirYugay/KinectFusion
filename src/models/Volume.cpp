@@ -71,37 +71,48 @@ void Volume::setNewBoundingPoints(Vector3f& min_, Vector3f& max_)
 
 // estimate the normal for a point in voxel grid coordinates using voxel grid by calculating the numerical derivative of TSDF
 Vector3f Volume::calculateNormal(const Vector3f& point) {
-	Vector3f shiftedXup, shiftedXdown, shiftedYup, shiftedYdown, shiftedZup, shiftedZdown;
+	//Vector3f shiftedXup, shiftedXdown, shiftedYup, shiftedYdown, shiftedZup, shiftedZdown;
+	Vector3f shiftedXup, shiftedYup, shiftedZup;
 	float x_dir, y_dir, z_dir;
 	Vector3f normal;
 
 	shiftedXup = point;
 	shiftedXup[0] += 1;
-	shiftedXdown = point;
-	shiftedXdown[0] -= 1;
+	//shiftedXdown = point;
+	//shiftedXdown[0] -= 1;
 
 	shiftedYup = point;
-	shiftedYup[0] += 1;
-	shiftedYdown = point;
-	shiftedYdown[0] -= 1;
+	shiftedYup[1] += 1;
+	//shiftedYdown = point;
+	//shiftedYdown[1] -= 1;
 
 	shiftedZup = point;
-	shiftedZup[0] += 1;
-	shiftedZdown = point;
-	shiftedZdown[0] -= 1;
+	shiftedZup[2] += 1;
+	//shiftedZdown = point;
+	//shiftedZdown[2] -= 1;
 
 	float sdfXup = trilinearInterpolation(shiftedXup);
-	float sdfXdown = trilinearInterpolation(shiftedXdown);
+	//float sdfXdown = trilinearInterpolation(shiftedXdown);
 
 	float sdfYup = trilinearInterpolation(shiftedYup);
-	float sdfYdown = trilinearInterpolation(shiftedYdown);
+	//float sdfYdown = trilinearInterpolation(shiftedYdown);
 
 	float sdfZup = trilinearInterpolation(shiftedYup);
-	float sdfZdown = trilinearInterpolation(shiftedYdown);
+	//float sdfZdown = trilinearInterpolation(shiftedYdown);
 
-	x_dir = (sdfXup - sdfXdown) / (2 *ddx);
-	y_dir = (sdfYup - sdfYdown) / (2 *ddy);
-	z_dir = (sdfZup - sdfZdown) / (2 *ddz);
+	float sdfPoint = trilinearInterpolation(point);
+
+	if (
+		sdfXup == std::numeric_limits<float>::max() ||
+		sdfYup == std::numeric_limits<float>::max() ||
+		sdfZup == std::numeric_limits<float>::max() ||
+		sdfPoint == std::numeric_limits<float>::max()
+		)
+		return Vector3f(MINF, MINF, MINF);
+
+	x_dir = (sdfXup - sdfPoint) / (dddx);
+	y_dir = (sdfYup - sdfPoint) / (dddy);
+	z_dir = (sdfZup - sdfPoint) / (dddz);
 
 	normal = Vector3f{ x_dir, y_dir, z_dir };
 	normal.normalize();
@@ -216,10 +227,10 @@ void Volume::integrate(Frame frame) {
 					sdf = depth - ((Pg - translation) / lambda).norm();
 
 					// compute the weight as the angle between the ray from the voxel point and normal of the associated frame point devided by depth
-					ray = Pg.normalized();
-					normal = frame.getNormal(index);
+					//ray = (Pg - translation).normalized();
+					//normal = frame.getNormalGlobal(index);
 			
-					cos_angle = ray.dot(normal) / ray.norm() / normal.norm();
+					//cos_angle = - ray.dot(normal) / ray.norm() / normal.norm();
 
 					tsdf_weight = 1; //cos_angle / depth; // 1; // 1 / depth;
 

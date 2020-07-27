@@ -12,10 +12,10 @@
 #include "VirtualSensor.h"
 #include "Eigen.h"
 
-#define DISTANCE_THRESHOLD 0.1
+#define DISTANCE_THRESHOLD 0.01
 #define EDGE_THRESHOLD 0.01
 #define ANGLE_THRESHOLD 0.5
-#define MAX_FRAME_NUM 10
+#define MAX_FRAME_NUM 50
 #define MIN_POINT -1.5f, -1.0f, -0.1f
 #define MAX_POINT 1.5f, 1.0f, 3.5f
 #define RESOLUTION 512, 512, 512
