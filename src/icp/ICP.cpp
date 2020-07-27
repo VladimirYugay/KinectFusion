@@ -1,6 +1,7 @@
 // Copyright 2020 Vladimir
 // Author: Vladimir
 #include "ICP.h"
+#include "../cuda/IcpCUDA.cuh"
 
 #include <iostream>
 #include <memory>
@@ -19,6 +20,8 @@ Matrix4f ICP::estimatePose(
 ) {
 
   for (size_t iteration = 0; iteration < iterationsNum; iteration++) {
+
+
     const std::vector<std::pair<size_t, size_t>> correspondenceIds = findIndicesOfCorrespondingPoints(estimatedPose);
 
     std::cout << "# corresponding points: " << correspondenceIds.size()
@@ -87,6 +90,17 @@ std::vector<std::pair<size_t, size_t>> ICP::findIndicesOfCorrespondingPoints(
       curFrame.getVertexMapGlobal();
   std::vector<Eigen::Vector3f> curFrameNormalMapGlobal =
       curFrame.getNormalMapGlobal();
+
+
+  int* corrIds = (int*)malloc(sizeof(int) * curFrame.getVertexCount());
+  CUDA::findCorrespondences(
+    prevFrame.getVertexMapPtr(), prevFrame.getNormalMapPtr(),
+    prevFrame.getFrameWidth(), prevFrame.getFrameHeight(),
+    prevFrame.getExtrinsicMatrix(), prevFrame.getIntrinsicMatrix(),
+    curFrame.getVertexMapPtr(), curFrame.getNormalMapPtr(),
+    curFrame.getFrameWidth(), curFrame.getFrameHeight(),
+    curFrame.getExtrinsicMatrix(), curFrame.getIntrinsicMatrix(),
+    estPose, corrIds);
 
   const auto rotation = estimatedPose.block(0, 0, 3, 3);
   const auto translation = estimatedPose.block(0, 3, 3, 1);

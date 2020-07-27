@@ -3,6 +3,8 @@
 #define MAX_TRUNCATION 1.0f
 #define MIN_TRUNCATION 1.0f
 
+#include <chrono>
+
 Volume::Volume() {}
 
 //! Initializes an empty volume dataset.
@@ -181,7 +183,7 @@ void Volume::integrate(Frame frame) {
 	float depth, lambda, sdf, tsdf, tsdf_weight, value, weight, cos_angle;
 	uint index;
 
-    std::cout << "CUDA CALL: " << std::endl;
+    // std::cout << "CUDA CALL: " << std::endl;
     // these values and weights are equival of Voxel* vol
     // This is a temporary fix since I don't want to break the interface
     // of all other components by modifying Voxel class for CUDA
@@ -198,30 +200,36 @@ void Volume::integrate(Frame frame) {
         }
     }
 
-    CUDA::integrate(
-        min, max, dx, dy, dz,
-        worldToCamera, intrinsic,
-        width, height,
-        depthMap, normals,
-        values, weights);
+    // std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
+    // CUDA::integrate(
+    //     min, max, dx, dy, dz,
+    //     worldToCamera, intrinsic,
+    //     width, height,
+    //     depthMap, normals,
+    //     values, weights);
+
+    // std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    // std::cout << "Time difference GPU = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
 
 
-    std::cout << " GPU Result: " << std::endl;
-    int count = 0;
-    for (int i = 0; i < dx * dy * dz; i++) {
-        if (values[i] > 0 && weights[i] > 0) {
-            count++;
-            printf("Val: %f, w: %f id: %d \n",
-                values[i], weights[i], i);
-        }
-        if (count > 5) {
-            break;
-        }
-    }
+
+    // std::cout << " GPU Result: " << std::endl;
+    // int count = 0;
+    // for (int i = 0; i < dx * dy * dz; i++) {
+    //     if (values[i] > 0 && weights[i] > 0) {
+    //         count++;
+    //         printf("Val: %f, w: %f id: %d \n",
+    //             values[i], weights[i], i);
+    //     }
+    //     if (count > 5) {
+    //         break;
+    //     }
+    // }
 
 
-	std::cout << "Integrate starting..." << std::endl;
-
+	// std::cout << "Integrate starting..." << std::endl;
+    // begin = std::chrono::steady_clock::now();
 	for (int k = 0; k < dz; k++) {
 		for (int j = 0; j < dy; j++) {
 			for (int i = 0; i < dx; i++) {
@@ -304,16 +312,19 @@ void Volume::integrate(Frame frame) {
 		}
 	}
 
-	std::cout << "Integrate done!" << std::endl;
-    count = 0;
-    for (int i = 0; i < dx * dy * dz; i++) {
-        if (vol[i].getValue() > 0 && vol[i].getWeight() > 0) {
-            count++;
-            printf("Val: %f, w: %f id: %d \n",
-                vol[i].getValue(), vol[i].getWeight(), i);
-        }
-        if (count > 5) {
-            break;
-        }
-    }
+    // end = std::chrono::steady_clock::now();
+    // std::cout << "Time difference CPU = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+
+	// std::cout << "Integrate done!" << std::endl;
+    // count = 0;
+    // for (int i = 0; i < dx * dy * dz; i++) {
+    //     if (vol[i].getValue() > 0 && vol[i].getWeight() > 0) {
+    //         count++;
+    //         printf("Val: %f, w: %f id: %d \n",
+    //             vol[i].getValue(), vol[i].getWeight(), i);
+    //     }
+    //     if (count > 5) {
+    //         break;
+    //     }
+    // }
 }

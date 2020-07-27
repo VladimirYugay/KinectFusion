@@ -67,7 +67,8 @@ set(HEADERS
     ${MODELS_DIR}/Volume.h
     ${RAYCASTER_DIR}/RayCaster.h
     ${RAYCASTER_DIR}/Ray.h
-    ${CUDA_DIR}/VolumeCUDA.cuh)
+    ${CUDA_DIR}/VolumeCUDA.cuh
+    ${CUDA_DIR}/IcpCUDA.cuh)
 
 set(SOURCES
     ${HELPERS_DIR}/FreeImageHelper.cpp
@@ -77,7 +78,8 @@ set(SOURCES
     ${SOURCE_DIR}/main.cpp
     ${RAYCASTER_DIR}/RayCaster.cpp
     ${RAYCASTER_DIR}/Ray.cpp
-    ${CUDA_DIR}/VolumeCUDA.cu)
+    ${CUDA_DIR}/VolumeCUDA.cu
+    ${CUDA_DIR}/IcpCUDA.cu)
 
 link_directories(${FreeImage_LIBRARY_DIR})
 add_executable(kinect_fusion ${SOURCES} ${HEADERS})
