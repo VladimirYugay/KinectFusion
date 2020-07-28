@@ -9,7 +9,7 @@
 
 class RayCaster {
 private:
-	Volume vol;
+	Volume& vol;
 	Frame frame;
 
 public:

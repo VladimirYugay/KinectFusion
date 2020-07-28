@@ -1,6 +1,6 @@
 #include "RayCaster.h"
 
-RayCaster::RayCaster() {}
+//RayCaster::RayCaster() {}
 
 RayCaster::RayCaster(Volume& vol_) : vol(vol_) {}
 
@@ -28,6 +28,7 @@ Frame& RayCaster::rayCast() {
 	const Matrix3f intrinsic_inverse = frame.getIntrinsicMatrix().inverse();
 	Vector3f translation = cameraToWorld.block(0, 3, 3, 1);
 	Matrix3f rotationMatrix = cameraToWorld.block(0, 0, 3, 3);
+	Vector4uc color;
 
 	int width = frame.getFrameWidth();
 	int height = frame.getFrameHeight();
@@ -58,7 +59,12 @@ Frame& RayCaster::rayCast() {
 
 			// calculate the direction vector as vector from camera position to the pixel(i, j)s world coordinates
 			index = i * width + j;
-
+			color = Vector4uc{
+				frame.colorMap[4 * index + 0],
+				frame.colorMap[4 * index + 1],
+				frame.colorMap[4 * index + 2],
+				frame.colorMap[4 * index + 3] 
+			};
 			/*
 			ray_dir = Vector3f{ float(j), float(i), 1.0f };
 			ray_dir = intrinsic_inverse * ray_dir;
@@ -120,6 +126,12 @@ Frame& RayCaster::rayCast() {
 					*/
 					output_vertices_global->emplace_back(v);
 					//output_normals_global->emplace_back(n);
+
+					if (!vol.voxelVisited(ray_previous)) {
+						//vol.updateColor(ray_previous_int, color, true);
+						vol.setVisited(ray_previous_int);
+					}
+						
 					break;
 				}
 
@@ -134,14 +146,25 @@ Frame& RayCaster::rayCast() {
 					*/
 					output_vertices_global->emplace_back(v);
 					//output_normals_global->emplace_back(n);
+
+					if (!vol.voxelVisited(ray_current)) {
+						//vol.updateColor(ray_previous_int, color, true);
+						vol.setVisited(ray_current_int);
+					}
+
 					break;
 				}
 				
-				else if (vol.get(ray_previous_int).getValue() > 0 && vol.get(ray_current_int).getValue() < 0) {
+				else if (
+					vol.get(ray_previous_int).getValue() != std::numeric_limits<float>::max() && 
+					vol.get(ray_previous_int).getValue() > 0 &&  
+					vol.get(ray_current_int).getValue() != std::numeric_limits<float>::max() &&
+					vol.get(ray_current_int).getValue() < 0
+				) {
 					sdf_1 = vol.trilinearInterpolation(ray_previous);
 					sdf_2 = vol.trilinearInterpolation(ray_current);
 
-					if (sdf_1 == std::numeric_limits<float>::max() || sdf_2 == std::numeric_limits<float>::max()) {
+					if (sdf_1 == std::numeric_limits<float>::max() || sdf_2 == std::numeric_limits<float>::max() || sdf_2 == sdf_1) {
 						mistake(*output_vertices_global, *output_normals_global);
 						break;
 					}
@@ -164,6 +187,20 @@ Frame& RayCaster::rayCast() {
 					*/
 					output_vertices_global->emplace_back(v);
 					//output_normals_global->emplace_back(n);
+
+					if (!vol.voxelVisited(ray_previous)) {
+						vol.setVisited(ray_previous_int);
+					}
+
+					if (!vol.voxelVisited(ray_current))
+						vol.setVisited(ray_current_int);
+
+					//std::cout << p << std::endl;
+					//if(!vol.voxelVisited(p))
+					//	vol.updateColor(p, color, true);
+					//else 
+					//	vol.updateColor(p, color, false);
+
 					break;
 				}
 			}

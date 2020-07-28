@@ -6,6 +6,8 @@
 #include <limits>
 #include "Eigen.h"
 #include "Frame.h"
+#include <unordered_map>
+#include <vector>
 
 typedef unsigned int uint;
 
@@ -16,11 +18,12 @@ class Voxel
 private:
 	float value;
 	float weight;
+	Vector4uc color;
 
 public:
 	Voxel() {}
 
-	Voxel(float value_, float weight_) : value{ value_ }, weight{ weight_ } {}
+	Voxel(float value_, float weight_, Vector4uc color_) : value{ value_ }, weight{ weight_ }, color{ color_ } {}
 
 	float getValue() {
 		return value;
@@ -30,12 +33,38 @@ public:
 		return weight;
 	}
 
+	Vector4uc getColor() {
+		return color;
+	}
+
 	void setValue(float v) {
 		value = v;
 	}
 
 	void setWeight(float w) {
 		weight = w;
+	}
+
+	void setColor(Vector4uc c) {
+		color = c;
+	}
+};
+
+// Hash function for Eigen matrix and vector.
+// The code is from `hash_combine` function of the Boost library. See
+// http://www.boost.org/doc/libs/1_55_0/doc/html/hash/reference.html#boost.hash_combine .
+template<typename T>
+struct matrix_hash : std::unary_function<T, size_t> {
+	std::size_t operator()(T const& matrix) const {
+		// Note that it is oblivious to the storage order of Eigen matrix (column- or
+		// row-major). It will give you the same hash value for two different matrices if they
+		// are the transpose of each other in different storage order.
+		size_t seed = 0;
+		for (size_t i = 0; i < matrix.size(); ++i) {
+			auto elem = *(matrix.data() + i);
+			seed ^= std::hash<typename T::Scalar>()(elem) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		}
+		return seed;
 	}
 };
 
@@ -58,6 +87,9 @@ private:
 	Voxel* vol;
 
 	uint m_dim;
+
+	//map that tracks raycasted voxels
+	std::unordered_map<Vector3i, bool, matrix_hash<Vector3i>> visitedVoxels;
 
 public:
 	
@@ -178,6 +210,71 @@ public:
 
 	//! Sets new min and max points
 	void setNewBoundingPoints(Vector3f& min_, Vector3f& max_);
+
+	//! Checks if a voxel at coords (x, y, z) was raycasted
+	bool voxelVisited(int x, int y, int z) {
+		Vector3i pos = Vector3i{ x, y, z };
+		if (visitedVoxels.find(pos) != visitedVoxels.end())
+			return true;
+		else
+			return false;
+	}
+
+	//! Checks if a voxel at point p in grid coords was raycasted
+	bool voxelVisited(Vector3f& p) {
+		Vector3i pi = Volume::intCoords(p);
+
+		return voxelVisited(pi[0], pi[1], pi[2]);
+	}
+
+	//! Adds voxel to visited voxels
+	void setVisited(Vector3i& voxCoords) {
+		std::vector<Vector3i> starting_points;
+		Vector3i p_int = voxCoords;
+
+		starting_points.emplace_back(Vector3i{ p_int[0] + 0, p_int[1] + 0, p_int[2] + 0 });
+		starting_points.emplace_back(Vector3i{ p_int[0] - 1, p_int[1] + 0, p_int[2] + 0 });
+		starting_points.emplace_back(Vector3i{ p_int[0] + 0, p_int[1] - 1, p_int[2] + 0 });
+		starting_points.emplace_back(Vector3i{ p_int[0] - 1, p_int[1] - 1, p_int[2] + 0 });
+		starting_points.emplace_back(Vector3i{ p_int[0] + 0, p_int[1] + 0, p_int[2] - 1 });
+		starting_points.emplace_back(Vector3i{ p_int[0] - 1, p_int[1] + 0, p_int[2] - 1 });
+		starting_points.emplace_back(Vector3i{ p_int[0] + 0, p_int[1] - 1, p_int[2] - 1 });
+		starting_points.emplace_back(Vector3i{ p_int[0] - 1, p_int[1] - 1, p_int[2] - 1 });
+
+		for (auto p_int : starting_points) {
+			visitedVoxels[Vector3i{ p_int[0] + 0, p_int[1] + 0, p_int[2] + 0 }] = true;
+			visitedVoxels[Vector3i{ p_int[0] + 1, p_int[1] + 0, p_int[2] + 0 }] = true;
+			visitedVoxels[Vector3i{ p_int[0] + 0, p_int[1] + 1, p_int[2] + 0 }] = true;
+			visitedVoxels[Vector3i{ p_int[0] + 1, p_int[1] + 1, p_int[2] + 0 }] = true;
+			visitedVoxels[Vector3i{ p_int[0] + 0, p_int[1] + 0, p_int[2] + 1 }] = true;
+			visitedVoxels[Vector3i{ p_int[0] + 1, p_int[1] + 0, p_int[2] + 1 }] = true;
+			visitedVoxels[Vector3i{ p_int[0] + 0, p_int[1] + 1, p_int[2] + 1 }] = true;
+			visitedVoxels[Vector3i{ p_int[0] + 1, p_int[1] + 1, p_int[2] + 1 }] = true;
+		}
+
+
+
+		//std::cout << voxCoords << std::endl;
+		//std::cout << visitedVoxels[voxCoords] << std::endl;
+		//if (visitedVoxels.empty())
+		//	std::cout << "Bok!\n";
+	}
+
+	//! Removes vocel from visited voxels
+	void removeVisited(Vector3i& voxCoords) {
+		visitedVoxels.erase(voxCoords);
+	}
+
+	//! Get visited voxels map
+	std::unordered_map<Vector3i, bool, matrix_hash<Vector3i>>& getVisitedVoxels() {
+		return visitedVoxels;
+	}
+
+	//! Updates the color of a voxel
+	void updateColor(Vector3i voxelCoords, Vector4uc& color, bool notVisited);
+
+	//! Updates the color of a voxel for a point p in grid coordinates
+	void updateColor(Vector3f point, Vector4uc& color, bool notVisited);
 
 	//! Checks if the point in grid coordinates is in the volume
 	bool isPointInVolume(Vector3f& point) {

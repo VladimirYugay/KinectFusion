@@ -55,6 +55,8 @@ set(HEADERS
     ${ICP_DIR}/ICP.h
     ${MODELS_DIR}/Frame.h
     ${MODELS_DIR}/Volume.h
+    ${MODELS_DIR}/SimpleMesh.h
+    ${MODELS_DIR}/MarchingCubes.h
     ${RAYCASTER_DIR}/RayCaster.h
     ${RAYCASTER_DIR}/Ray.h)
 

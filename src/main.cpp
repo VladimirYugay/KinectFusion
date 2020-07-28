@@ -11,11 +11,13 @@
 #include "Volume.h"
 #include "VirtualSensor.h"
 #include "Eigen.h"
+#include "SimpleMesh.h"
+#include "MarchingCubes.h"
 
 #define DISTANCE_THRESHOLD 0.01
 #define EDGE_THRESHOLD 0.01
 #define ANGLE_THRESHOLD 0.5
-#define MAX_FRAME_NUM 50
+#define MAX_FRAME_NUM 800
 #define MIN_POINT -1.5f, -1.0f, -0.1f
 #define MAX_POINT 1.5f, 1.0f, 3.5f
 #define RESOLUTION 512, 512, 512
@@ -24,6 +26,7 @@ int main() {
   // Make sure this path points to the data folder
     std::string filenameIn = "../data/rgbd_dataset_freiburg1_xyz/";
     std::string filenameBaseOut = std::string("../output/mesh_");
+    std::string filenameBaseOutMC = std::string("../output/MCmesh_");
 
   // load video
   std::cout << "Initialize virtual sensor..." << std::endl;
@@ -52,7 +55,6 @@ int main() {
       Matrix4f trajectoryInv = sensor.GetTrajectory().inverse();
       int depthHeight = sensor.GetDepthImageHeight();
       int depthWidth = sensor.GetDepthImageWidth();
-      std::stringstream ss;
 
       //std::cout << trajectory;
 
@@ -86,10 +88,52 @@ int main() {
           curFrame = rc.rayCast();
 
           if (frameCount % 5 == 1) {
+              std::stringstream ss;
               ss << filenameBaseOut << frameCount << ".off";
 
               if (!curFrame.writeMesh(ss.str(), EDGE_THRESHOLD)) {
                   std::cout << "Failed to write mesh!\nCheck file path!" << std::endl;
+                  return -1;
+              }
+          }
+
+          if (frameCount % 20 == 1) {
+              //TODO
+              std::stringstream ss;
+              ss << filenameBaseOutMC << frameCount << ".off";
+
+              std::cout << "Marching Cubes started..." << std::endl;
+               // extract the zero iso-surface using marching cubes
+              SimpleMesh mesh;
+              
+              std::unordered_map<Vector3i, bool, matrix_hash<Vector3i>> visitedVoxels = volume.getVisitedVoxels();
+
+              for (auto&it = visitedVoxels.begin(); it != visitedVoxels.end(); it++)
+              {
+                  //std::cout << it->first << std::endl;
+                  Vector3i voxelCoords = it->first;
+                  ProcessVolumeCell(&volume, voxelCoords[0], voxelCoords[1], voxelCoords[2], 0.00f, &mesh);
+              }
+              /*
+              for (unsigned int x = 0; x < volume.getDimX() - 1; x++)
+              {
+                  //std::cerr << "Marching Cubes on slice " << x << " of " << volume.getDimX() << std::endl;
+
+                  for (unsigned int y = 0; y < volume.getDimY() - 1; y++)
+                  {
+                      for (unsigned int z = 0; z < volume.getDimZ() - 1; z++)
+                      {
+                          ProcessVolumeCell(&volume, x, y, z, 0.00f, &mesh);
+                      }
+                  }
+              }
+              */
+              std::cout << "Marching Cubes done! " << mesh.getVertices().size() << " " << mesh.getTriangles().size() << std::endl;
+
+              // write mesh to file
+              if (!mesh.writeMesh(ss.str()))
+              {
+                  std::cout << "ERROR: unable to write output file!" << std::endl;
                   return -1;
               }
           }
