@@ -72,10 +72,10 @@ int main() {
           //std::cout << curFrame.getVertex(302992) << std::endl;
 
           ICP icp(prevFrame, curFrame, DISTANCE_THRESHOLD, ANGLE_THRESHOLD);
-          // std::vector<std::pair<size_t, size_t>> correspondenceIds(
+          // std::DISTANCE_THRESHOLDvector<std::pair<size_t, size_t>> correspondenceIds(
           //     {{302990, 302990}});
 
-          pose = icp.estimatePose(pose, 10);
+          pose = icp.estimatePose(pose, 1);
           std::cout << pose << std::endl;
 
           curFrame.setExtrinsicMatrix(curFrame.getExtrinsicMatrix() * pose.inverse());

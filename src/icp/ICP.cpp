@@ -2,7 +2,7 @@
 // Author: Vladimir
 #include "ICP.h"
 #include "../cuda/IcpCUDA.cuh"
-
+#include <chrono>
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -92,15 +92,24 @@ std::vector<std::pair<size_t, size_t>> ICP::findIndicesOfCorrespondingPoints(
       curFrame.getNormalMapGlobal();
 
 
-  int* corrIds = (int*)malloc(sizeof(int) * curFrame.getVertexCount());
-  CUDA::findCorrespondences(
-    prevFrame.getVertexMapPtr(), prevFrame.getNormalMapPtr(),
-    prevFrame.getFrameWidth(), prevFrame.getFrameHeight(),
-    prevFrame.getExtrinsicMatrix(), prevFrame.getIntrinsicMatrix(),
-    curFrame.getVertexMapPtr(), curFrame.getNormalMapPtr(),
-    curFrame.getFrameWidth(), curFrame.getFrameHeight(),
-    curFrame.getExtrinsicMatrix(), curFrame.getIntrinsicMatrix(),
-    estPose, corrIds);
+  int* corrIds = (int*)malloc(sizeof(int) * prevFrame.getVertexCount());
+
+  // std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
+//   CUDA::findCorrespondences(
+//     prevFrame.getVertexMapPtr(), prevFrame.getNormalMapPtr(),
+//     prevFrame.getFrameWidth(), prevFrame.getFrameHeight(),
+//     prevFrame.getExtrinsicMatrix(), prevFrame.getIntrinsicMatrix(),
+//     curFrame.getVertexMapPtr(), curFrame.getNormalMapPtr(),
+//     curFrame.getFrameWidth(), curFrame.getFrameHeight(),
+//     curFrame.getExtrinsicMatrix(), curFrame.getIntrinsicMatrix(),
+//     estPose, corrIds);
+
+//   std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+//   std::cout << "Time difference GPU = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+
+
+//   begin = std::chrono::steady_clock::now();
 
   const auto rotation = estimatedPose.block(0, 0, 3, 3);
   const auto translation = estimatedPose.block(0, 3, 3, 1);
@@ -110,24 +119,24 @@ std::vector<std::pair<size_t, size_t>> ICP::findIndicesOfCorrespondingPoints(
   const auto rotationInv = estimatedPoseInv.block(0, 0, 3, 3);
   const auto translationInv = estimatedPoseInv.block(0, 3, 3, 1);
 
-  // GPU implementation: use a separate thread for every run of the for
-  // loop
+  std::vector<int> falseIds;
+
   for (size_t idx = 0; idx < prevFrameVertexMapGlobal.size(); idx++) {
     Eigen::Vector3f prevPointGlobal = prevFrameVertexMapGlobal[idx];
     Eigen::Vector3f prevNormalGlobal = prevFrameNormalMapGlobal[idx];
-    // std::cout << "Curent Point (Camera): " << curPoint[0] << " " <<
-    // curPoint[1] << " " << curPoint[2] << std::endl;
+
     if (prevPointGlobal.allFinite() && prevNormalGlobal.allFinite()) {
 
         Eigen::Vector3f prevPointCurCamera = rotationInv * prevPointGlobal + translationInv;
         Eigen::Vector3f prevNormalCurCamera = rotationInv * prevFrameNormalMapGlobal[idx];
 
-      // project point from global camera system into camera system of
-      // the current frame
+        // if (idx == 22415)
+        //     printf("CPU prev v: %f  %f %f\n",
+        //         prevPointGlobal[0], prevPointGlobal[1],
+        //         prevPointGlobal[2]);
+
       const Eigen::Vector3f prevPointCurFrame =
           curFrame.projectPointIntoFrame(prevPointCurCamera);
-      // project point from camera system of the previous frame onto the
-      // image plane of the current frame
       const Eigen::Vector2i prevPointImgCoordCurFrame =
           curFrame.projectOntoImgPlane(prevPointCurFrame);
 
@@ -136,8 +145,26 @@ std::vector<std::pair<size_t, size_t>> ICP::findIndicesOfCorrespondingPoints(
             prevPointImgCoordCurFrame[1] * curFrame.getFrameWidth() +
             prevPointImgCoordCurFrame[0];
 
+        // if (idx == 22415)
+        //     printf("Index CPU: %d \n", curIdx);
+
         Eigen::Vector3f curFramePointGlobal = rotation * curFrameVertexMapGlobal[curIdx] + translation;
         Eigen::Vector3f curFrameNormalGlobal = rotation * curFrameNormalMapGlobal[curIdx];
+
+        // if (idx == 305038) {
+        //     printf("CPU cam: %f %f %f \n",
+        //         curFramePointGlobal[0],
+        //         curFramePointGlobal[1],
+        //         curFramePointGlobal[2]);
+        //     printf("CPU norm: %f \n",
+        //         (curFramePointGlobal - prevPointGlobal).norm());
+        //     printf("CPU angle: %f \n",
+        //         std::abs(curFrameNormalGlobal.dot(prevNormalGlobal)));
+        //     printf("CPU prev norm: %f %f %f \n",
+        //         prevNormalGlobal.x(), prevNormalGlobal.y(), prevNormalGlobal.z());
+        //     printf("CPU cur norm: %f %f %f \n",
+        //         curFrameNormalGlobal.x(), curFrameNormalGlobal.y(), curFrameNormalGlobal.z());
+        // }
 
         if (curFramePointGlobal.allFinite() &&
             (curFramePointGlobal - prevPointGlobal).norm() <
@@ -145,10 +172,48 @@ std::vector<std::pair<size_t, size_t>> ICP::findIndicesOfCorrespondingPoints(
             curFrameNormalGlobal.allFinite() &&
             (std::abs(curFrameNormalGlobal.dot(prevNormalGlobal)) >
              normalThreshold)) {
+        //   if (idx == 22416) {
+        //       printf("CPU pair: %d %d\n", idx, curIdx);
+        //   }
           indicesOfCorrespondingPoints.push_back(std::make_pair(idx, curIdx));
+        } else {
+          falseIds.push_back(idx);
         }
       }
     }
   }
+
+//   end = std::chrono::steady_clock::now();
+//   std::cout << "Time difference CPU = " <<
+//     std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+
+//   std::cout << "CPU pts num: "
+//     << indicesOfCorrespondingPoints.size() << std::endl;
+
+//   int counter = 0;
+//   for (int i = 0; i < curFrame.getVertexCount(); i++) {
+//       if (corrIds[i] > 0) {
+//           counter++;
+//       }
+//   }
+//   std::cout << "GPU pts num: " << counter << std::endl;
+
+
+// //   for (int i = 0; i < falseIds.size(); i++) {
+// //       if (corrIds[falseIds[i]] > 0) {
+// //           printf("False id: %d %d \n",  falseIds[i], corrIds[falseIds[i]]);
+// //       }
+// //   }
+
+//   std::cout << "Test Corr" << std::endl;
+//   for (int i = 0; i < 10; i++) {
+
+//       int left = indicesOfCorrespondingPoints[i].first;
+//       int right = indicesOfCorrespondingPoints[i].second;
+
+//       std::cout << "CPU: " << left << " " << right << std::endl;
+//       std::cout << "GPU: " << left << " " << corrIds[left] << std::endl;
+//   }
+
   return indicesOfCorrespondingPoints;
 }
