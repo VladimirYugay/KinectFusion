@@ -9,6 +9,7 @@
 
 #include "Eigen.h"
 #include "VirtualSensor.h"
+#include <memory>
 
 class Frame {
     friend class RayCaster;
