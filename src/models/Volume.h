@@ -231,7 +231,7 @@ public:
 	void setVisited(Vector3i& voxCoords) {
 		std::vector<Vector3i> starting_points;
 		Vector3i p_int = voxCoords;
-
+		
 		starting_points.emplace_back(Vector3i{ p_int[0] + 0, p_int[1] + 0, p_int[2] + 0 });
 		starting_points.emplace_back(Vector3i{ p_int[0] - 1, p_int[1] + 0, p_int[2] + 0 });
 		starting_points.emplace_back(Vector3i{ p_int[0] + 0, p_int[1] - 1, p_int[2] + 0 });

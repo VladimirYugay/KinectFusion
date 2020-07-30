@@ -285,7 +285,7 @@ void Volume::integrate(Frame frame) {
 					vol[getPosFromTuple(i, j, k)].setValue((value * weight + tsdf * tsdf_weight) / (weight + tsdf_weight));
 					vol[getPosFromTuple(i, j, k)].setWeight(weight + tsdf_weight);
 
-					if (sdf >= 0) {
+					if (sdf <= TRUNCATION / 2 && sdf>= - TRUNCATION / 2) {
 						vol[getPosFromTuple(i, j, k)].setColor(
 							Vector4uc{
 								(const unsigned char)((color[0] * weight + colorMap[4 * index + 0] * tsdf_weight) / (weight + tsdf_weight)),

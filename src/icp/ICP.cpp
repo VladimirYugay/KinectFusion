@@ -129,7 +129,7 @@ std::vector<std::pair<size_t, size_t>> ICP::findIndicesOfCorrespondingPoints(
             (curFramePointGlobal - prevPointGlobal).norm() <
                 distanceThreshold &&
             curFrameNormalGlobal.allFinite() &&
-            (std::abs(curFrameNormalGlobal.dot(prevNormalGlobal)) >
+            (std::abs(curFrameNormalGlobal.dot(prevNormalGlobal)) / curFrameNormalGlobal.norm() / prevNormalGlobal.norm() <
              normalThreshold)) {
           indicesOfCorrespondingPoints.push_back(std::make_pair(idx, curIdx));
         }

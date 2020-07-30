@@ -14,13 +14,14 @@
 #include "SimpleMesh.h"
 #include "MarchingCubes.h"
 
-#define DISTANCE_THRESHOLD 0.01
-#define EDGE_THRESHOLD 0.01
-#define ANGLE_THRESHOLD 0.5
+#define DISTANCE_THRESHOLD 0.05
+#define EDGE_THRESHOLD 0.02
+#define ANGLE_THRESHOLD 1.05
 #define MAX_FRAME_NUM 800
 #define MIN_POINT -1.5f, -1.0f, -0.1f
 #define MAX_POINT 1.5f, 1.0f, 3.5f
 #define RESOLUTION 512, 512, 512
+#define ICP_ITERATIONS 20
 
 int main() {
   // Make sure this path points to the data folder
@@ -77,7 +78,7 @@ int main() {
           // std::vector<std::pair<size_t, size_t>> correspondenceIds(
           //     {{302990, 302990}});
 
-          pose = icp.estimatePose(pose, 10);
+          pose = icp.estimatePose(pose, ICP_ITERATIONS);
           std::cout << pose << std::endl;
 
           curFrame.setExtrinsicMatrix(curFrame.getExtrinsicMatrix() * pose.inverse());
