@@ -2,12 +2,15 @@
 // Author: Vladimir
 #pragma once
 
+#ifndef ICP_H
+#define ICP_H
+
 #include <memory>
 #include <utility>
 #include <vector>
 
-#include "../helpers/Eigen.h"
-#include "../models/Frame.h"
+#include "Eigen.h"
+#include "Frame.h"
 
 class ICP {
  public:
@@ -15,8 +18,8 @@ class ICP {
       const double normalThreshold);
 
   Matrix4f estimatePose(
-      const std::vector<std::pair<size_t, size_t>> &correspondenceIds,
-      int iterationsNum = 1);
+      Eigen::Matrix4f& estimatedPose,
+      int iterationsNum = 10 );
 
   std::vector<std::pair<size_t, size_t>> findIndicesOfCorrespondingPoints(
       const Eigen::Matrix4f &estimatedPose);
@@ -27,3 +30,5 @@ class ICP {
   const double distanceThreshold;
   const double normalThreshold;
 };
+
+#endif // !ICP_H
