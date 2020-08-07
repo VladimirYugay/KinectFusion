@@ -13,33 +13,19 @@ Below you can see a result of a raycast which was performed after ~120 frames.
 
 ### How to run the code?
 
-#### Setup (Linux)
+First clone the repo with `git clone https://github.com/VladimirYugay/KinectFusion.git`.
 
-- If you're contributing, please use `cpplint`\
-  Install via: `pip install cpplint`\
-  Run with: `cpplint [OPTIONS] files`
+#### Setup (Linux)
 
 - Install `cmake` if it's not installed yet\
   `sudo apt-get install cmake`
 
 - Run `sudo apt-get install libfreeimage3 libfreeimage-dev` in order to be able to process images from the dataset by simulating the virtal sensor
 
-- Clone the repo\
-  `git clone https://github.com/VladimirYugay/KinectFusion.git`
 
 - Download header only Eigen library and put it into `libs` folder by runnning:\
   `cd KinectFusion/libs`\
   `git clone https://gitlab.com/libeigen/eigen.git`
-
-- Download the dataset from [here](/home/vladimir/university/3d_scanning_and_motion_capture/3DSaMC/data/exercise_1_data) and save it under `KinectFusion/data` folder
-
-- Build and run the project \
-  `cd ..`\
-  `mkdir build`\
-  `cd build`\
-  `cmake ..`\
-  `make`\
-  `./kinect_fusion`
 
 #### Setup (Windows)
 
@@ -53,3 +39,17 @@ Below you can see a result of a raycast which was performed after ~120 frames.
 #### Download dataset
 You can either use your own image sequence which was recorded with a Kinect Camera v2 or you can download the same dataset we used [here](https://vision.in.tum.de/rgbd/dataset/freiburg1/rgbd_dataset_freiburg1_xyz.tgz). 
 Extract the folder and move it to `KinectFusion/data/rgbd_dataset_freiburg1_xyz`.
+
+#### Build and run 
+In order to build and run the project follow these steps:
+
+  `cd ..`\
+  `mkdir build`\
+  `cd build`\
+  `cmake ..`\
+  `make`\
+  `./kinect_fusion`
+
+#### Contributer Guidelines
+If you want to contribute, please use `cpplint`.  
+You can install it via `pip install cpplint` and run with: `cpplint [OPTIONS] files`.
