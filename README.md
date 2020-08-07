@@ -1,8 +1,9 @@
 ## Kinect Fusion
 
+
 ### Project overview
 
-The goal of this project is to obtain a 3D reconstruction of a static scene which was recorded with a Kinect camera.
+The goal of this project is to obtain a 3D reconstruction of a static scene which was recorded with a Kinect camera. The Kinect camera provides RGB as well as depth information as can be seen in the picture below.
 ![here](readme_images/readme_image.jpg)
 
 ### Results
@@ -10,7 +11,9 @@ The goal of this project is to obtain a 3D reconstruction of a static scene whic
 Below you can see a result of a raycast which was performed after ~120 frames.
 ![here](readme_images/raycasted_result2.png)
 
-### Setup (Linux)
+### How to run the code?
+
+#### Setup (Linux)
 
 - If you're contributing, please use `cpplint`\
   Install via: `pip install cpplint`\
@@ -38,7 +41,15 @@ Below you can see a result of a raycast which was performed after ~120 frames.
   `make`\
   `./kinect_fusion`
 
-### Setup (Windows)
+#### Setup (Windows)
 
 - Follow the same file structure as in Linux Setup
 - Add pre-compiled libraries of FreeImage in `KinectFusion/libs`
+
+#### Setup (Mac)
+- `brew install eigen`
+- `brew install freeimage`
+
+#### Download dataset
+You can either use your own image sequence which was recorded with a Kinect Camera v2 or you can download the same dataset we used [here](https://vision.in.tum.de/rgbd/dataset/freiburg1/rgbd_dataset_freiburg1_xyz.tgz). 
+Extract the folder and move it to `KinectFusion/data/rgbd_dataset_freiburg1_xyz`.
