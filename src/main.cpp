@@ -109,7 +109,7 @@ int main() {
               
               std::unordered_map<Vector3i, bool, matrix_hash<Vector3i>> visitedVoxels = volume.getVisitedVoxels();
 
-              for (auto&it = visitedVoxels.begin(); it != visitedVoxels.end(); it++)
+              for (auto it = visitedVoxels.begin(); it != visitedVoxels.end(); it++)
               {
                   //std::cout << it->first << std::endl;
                   Vector3i voxelCoords = it->first;
