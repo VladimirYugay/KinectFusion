@@ -25,7 +25,10 @@ First clone the repo with `git clone https://github.com/VladimirYugay/KinectFusi
 
 - Download header only Eigen library and put it into `libs` folder by runnning:\
   `cd KinectFusion/libs`\
-  `git clone https://gitlab.com/libeigen/eigen.git`
+  `git clone https://gitlab.com/libeigen/eigen.git`\
+  Use any stable release (e.g. 3.4.0) as the upstream currently requires specific compiler versions (newer than GCC 9.3.0 and Intel 2021.4.0.20210910)\
+  `cd eigen`\
+  `git checkout tags/3.4.0`
 
 #### Setup (Windows)
 
